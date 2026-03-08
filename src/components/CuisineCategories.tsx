@@ -4,6 +4,15 @@ import { useCuisineCategories, useRegionStats } from "@/hooks/use-homepage-data"
 import { ChevronRight, Sparkles } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const regionGradients: Record<string, string> = {
+  Asia: "from-amber-500/10 to-orange-500/5",
+  Europe: "from-rose-500/10 to-purple-500/5",
+  Americas: "from-emerald-500/10 to-teal-500/5",
+  "Middle East": "from-amber-500/10 to-red-500/5",
+  Africa: "from-orange-500/10 to-yellow-500/5",
+  Oceania: "from-blue-500/10 to-indigo-500/5",
+};
+
 const CuisineCategories = () => {
   const [activeRegion, setActiveRegion] = useState<string | null>(null);
   const { data: cuisines, isLoading: loadingCuisines } = useCuisineCategories();
@@ -13,9 +22,15 @@ const CuisineCategories = () => {
     ? (cuisines ?? []).filter((c) => c.region === activeRegion)
     : cuisines ?? [];
 
+  const bgGradient = activeRegion ? regionGradients[activeRegion] || "" : "";
+
   return (
-    <section id="cuisines" className="py-24 bg-background relative overflow-hidden">
-      {/* Decorative background circles */}
+    <section id="cuisines" className="py-24 relative overflow-hidden transition-all duration-700">
+      {/* Dynamic background gradient */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${bgGradient || "from-transparent to-transparent"} transition-all duration-700`} />
+      <div className="absolute inset-0 bg-background/95" />
+
+      {/* Decorative orbs */}
       <div className="absolute -top-32 -right-32 w-64 h-64 rounded-full bg-accent/5 blur-3xl" />
       <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
 
@@ -35,11 +50,11 @@ const CuisineCategories = () => {
           </h2>
         </motion.div>
 
-        {/* Region buttons */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-14">
+        {/* Region pills – horizontal scroller */}
+        <div className="flex gap-3 mb-14 overflow-x-auto pb-2 scrollbar-hide justify-center flex-wrap">
           {loadingRegions
             ? Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-24 rounded-2xl" />
+                <Skeleton key={i} className="h-12 w-32 rounded-full" />
               ))
             : (regionStats ?? []).map((region, i) => (
                 <motion.button
@@ -48,69 +63,68 @@ const CuisineCategories = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.06 }}
-                  whileHover={{ scale: 1.03, y: -2 }}
-                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() =>
                     setActiveRegion(activeRegion === region.name ? null : region.name)
                   }
-                  className={`group p-5 rounded-2xl border-2 transition-all text-left relative overflow-hidden ${
+                  className={`flex items-center gap-3 px-6 py-3 rounded-full transition-all duration-300 ${
                     activeRegion === region.name
-                      ? "bg-primary text-primary-foreground border-primary glow-burgundy"
-                      : "bg-card border-border hover:border-accent/40 hover:shadow-lg"
+                      ? "bg-primary text-primary-foreground shadow-lg glow-burgundy"
+                      : "bg-card text-foreground border border-border hover:border-accent/40 hover:shadow-lg"
                   }`}
                 >
-                  {activeRegion === region.name && (
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent" />
-                  )}
-                  <p
-                    className={`font-display text-lg font-bold relative z-10 ${
-                      activeRegion === region.name ? "text-primary-foreground" : "text-foreground"
+                  <span className="font-display text-sm font-bold">{region.name}</span>
+                  <span
+                    className={`font-body text-xs px-2 py-0.5 rounded-full ${
+                      activeRegion === region.name
+                        ? "bg-white/20 text-primary-foreground"
+                        : "bg-muted text-muted-foreground"
                     }`}
                   >
-                    {region.name}
-                  </p>
-                  <p
-                    className={`font-body text-xs mt-1 relative z-10 ${
-                      activeRegion === region.name ? "text-primary-foreground/70" : "text-muted-foreground"
-                    }`}
-                  >
-                    {region.countryCount} countries
-                  </p>
+                    {region.countryCount}
+                  </span>
                 </motion.button>
               ))}
         </div>
 
-        {/* Cuisine grid */}
+        {/* Cuisine orbs grid */}
         {loadingCuisines ? (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
             {Array.from({ length: 16 }).map((_, i) => (
-              <Skeleton key={i} className="h-28 rounded-2xl" />
+              <Skeleton key={i} className="h-32 rounded-full" />
             ))}
           </div>
         ) : (
-          <motion.div layout className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+          <motion.div layout className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
             <AnimatePresence mode="popLayout">
               {filtered.map((cuisine, i) => (
                 <motion.button
                   key={cuisine.name}
                   layout
-                  initial={{ opacity: 0, scale: 0.85 }}
+                  initial={{ opacity: 0, scale: 0.7 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.85 }}
-                  transition={{ delay: i * 0.015, type: "spring", stiffness: 400, damping: 25 }}
-                  whileHover={{ scale: 1.08, y: -4 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="group flex flex-col items-center gap-2 p-4 bg-card rounded-2xl border border-border hover:border-accent/50 hover:shadow-lg transition-all cursor-pointer relative overflow-hidden"
+                  exit={{ opacity: 0, scale: 0.7 }}
+                  transition={{ delay: i * 0.02, type: "spring", stiffness: 400, damping: 25 }}
+                  whileHover={{ scale: 1.15, y: -8 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="group flex flex-col items-center justify-center p-4 aspect-square rounded-full bg-card border-2 border-border hover:border-accent/50 transition-all cursor-pointer relative overflow-hidden orb-glow hover:shadow-2xl"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-accent/0 to-accent/0 group-hover:from-accent/5 group-hover:to-transparent transition-all duration-500" />
-                  <span className="text-4xl group-hover:scale-110 transition-transform duration-300 relative z-10 drop-shadow-sm">
+                  {/* Inner glow on hover */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-accent/0 to-accent/0 group-hover:from-accent/10 group-hover:to-transparent transition-all duration-500" />
+
+                  <span className="text-3xl sm:text-4xl group-hover:scale-125 transition-transform duration-300 relative z-10 drop-shadow-sm">
                     {cuisine.emoji}
                   </span>
-                  <div className="text-center relative z-10">
-                    <p className="font-display text-xs font-bold text-foreground">{cuisine.name}</p>
-                    <p className="font-body text-[10px] text-muted-foreground font-medium">
-                      {cuisine.count} {cuisine.count === 1 ? "dish" : "dishes"}
-                    </p>
+                  <div className="text-center relative z-10 mt-1">
+                    <p className="font-display text-[10px] sm:text-xs font-bold text-foreground">{cuisine.name}</p>
+                    <motion.p
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      className="font-body text-[9px] text-muted-foreground font-medium"
+                    >
+                      {cuisine.count} dishes
+                    </motion.p>
                   </div>
                 </motion.button>
               ))}

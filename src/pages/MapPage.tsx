@@ -5,6 +5,7 @@ import CountryDetailPanel from "@/components/CountryDetailPanel";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { motion, AnimatePresence } from "framer-motion";
 
 export type CountryData = {
   id: string;
@@ -60,8 +61,6 @@ const MapPage = () => {
   });
 
   const selectedCountry = countries.find((c) => c.id === selectedCountryId) || null;
-
-  // Build a lookup from ISO alpha-2 code to country
   const countryByCode = new Map(countries.map((c) => [c.code.toUpperCase(), c]));
 
   return (
@@ -69,44 +68,64 @@ const MapPage = () => {
       <Header />
       <main className="pt-16">
         <div className="container mx-auto px-4 py-8">
-          <div className="text-center mb-8">
-            <p className="font-body text-sm font-semibold tracking-[0.3em] uppercase text-accent mb-2">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-8"
+          >
+            <p className="font-body text-sm font-bold tracking-[0.3em] uppercase text-accent mb-2">
               Explore 197 Countries
             </p>
-            <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground">
+            <h1 className="font-display text-4xl md:text-5xl font-bold text-foreground flex items-center justify-center gap-3">
+              <motion.span
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                className="inline-block"
+              >
+                🌍
+              </motion.span>
               The World's Food Map
             </h1>
             <p className="font-body text-muted-foreground mt-3 max-w-xl mx-auto">
               Click any country to discover its food culture, signature dishes, and culinary traditions.
             </p>
-          </div>
+          </motion.div>
 
           <div className="relative flex flex-col lg:flex-row gap-6">
-            <div className={`transition-all duration-500 ${selectedCountry ? "lg:w-3/5" : "w-full"}`}>
+            <motion.div
+              layout
+              className={`transition-all duration-500 ${selectedCountry ? "lg:w-3/5" : "w-full"}`}
+            >
               <WorldMap
                 countryByCode={countryByCode}
                 selectedCode={selectedCountry?.code.toUpperCase() || null}
                 onSelectCountry={(code) => {
                   const country = countryByCode.get(code);
                   if (country) {
-                    setSelectedCountryId(
-                      selectedCountryId === country.id ? null : country.id
-                    );
+                    setSelectedCountryId(selectedCountryId === country.id ? null : country.id);
                   }
                 }}
               />
-            </div>
+            </motion.div>
 
-            {selectedCountry && (
-              <div className="lg:w-2/5">
-                <CountryDetailPanel
-                  country={selectedCountry}
-                  dishes={dishes}
-                  dishesLoading={dishesLoading}
-                  onClose={() => setSelectedCountryId(null)}
-                />
-              </div>
-            )}
+            <AnimatePresence>
+              {selectedCountry && (
+                <motion.div
+                  initial={{ opacity: 0, x: 40 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 40 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  className="lg:w-2/5"
+                >
+                  <CountryDetailPanel
+                    country={selectedCountry}
+                    dishes={dishes}
+                    dishesLoading={dishesLoading}
+                    onClose={() => setSelectedCountryId(null)}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </main>

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Globe, Heart, MapPin, Star, ArrowLeft, Compass, Trophy, Plane } from "lucide-react";
+import { Globe, Heart, MapPin, Star, ArrowLeft, Compass, Trophy, Plane, Sparkles } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/hooks/use-auth";
@@ -74,12 +74,8 @@ const PassportPage = () => {
       <Header />
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4">
-          {/* Passport Header with rich gradient */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-12"
-          >
+          {/* Passport Header */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-12">
             <Button variant="ghost" size="sm" onClick={() => navigate("/")} className="mb-4 text-muted-foreground">
               <ArrowLeft className="h-4 w-4 mr-1" /> Back
             </Button>
@@ -101,28 +97,46 @@ const PassportPage = () => {
                     Your personal journey through the world's cuisines
                   </p>
                   {currentMilestone && (
-                    <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mt-4">
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mt-4"
+                    >
                       <span className="text-xl">{currentMilestone.emoji}</span>
                       <span className="font-body text-sm font-bold text-primary-foreground">{currentMilestone.label}</span>
-                    </div>
+                    </motion.div>
                   )}
                 </div>
 
+                {/* Animated progress ring */}
                 <div className="flex-shrink-0">
-                  <div className="relative w-32 h-32">
+                  <div className="relative w-36 h-36">
                     <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-                      <circle cx="50" cy="50" r="42" fill="none" stroke="hsla(0,0%,100%,0.1)" strokeWidth="8" />
-                      <circle
+                      <circle cx="50" cy="50" r="42" fill="none" stroke="hsla(0,0%,100%,0.1)" strokeWidth="6" />
+                      <motion.circle
                         cx="50" cy="50" r="42" fill="none"
-                        stroke="hsl(38, 70%, 50%)"
-                        strokeWidth="8"
+                        stroke="url(#goldGradient)"
+                        strokeWidth="6"
                         strokeLinecap="round"
-                        strokeDasharray={`${progressPercent * 2.64} ${264 - progressPercent * 2.64}`}
-                        className="transition-all duration-1000 ease-out"
+                        initial={{ strokeDasharray: "0 264" }}
+                        animate={{ strokeDasharray: `${progressPercent * 2.64} ${264 - progressPercent * 2.64}` }}
+                        transition={{ duration: 1.5, ease: "easeOut" }}
                       />
+                      <defs>
+                        <linearGradient id="goldGradient" x1="0" y1="0" x2="1" y2="1">
+                          <stop offset="0%" stopColor="hsl(38, 80%, 55%)" />
+                          <stop offset="100%" stopColor="hsl(45, 90%, 65%)" />
+                        </linearGradient>
+                      </defs>
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="font-display text-3xl font-bold text-primary-foreground">{exploredCount}</span>
+                      <motion.span
+                        initial={{ scale: 0.5 }}
+                        animate={{ scale: 1 }}
+                        className="font-display text-4xl font-bold text-primary-foreground"
+                      >
+                        {exploredCount}
+                      </motion.span>
                       <span className="font-body text-[10px] text-primary-foreground/50">of {totalCountries}</span>
                     </div>
                   </div>
@@ -143,7 +157,8 @@ const PassportPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 + i * 0.1 }}
-                className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg transition-shadow"
+                whileHover={{ y: -4 }}
+                className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg transition-all"
               >
                 <div className="flex items-center gap-3 mb-4">
                   <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}>
@@ -156,41 +171,49 @@ const PassportPage = () => {
             ))}
           </div>
 
-          {/* Milestones */}
-          {nextMilestone && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="mb-12 bg-card border border-border rounded-2xl p-6"
-            >
-              <div className="flex items-center gap-2 mb-4">
-                <Trophy className="h-5 w-5 text-accent" />
-                <h3 className="font-display text-lg font-bold text-foreground">Next Milestone</h3>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="text-3xl">{nextMilestone.emoji}</span>
-                <div className="flex-1">
-                  <p className="font-body text-sm font-bold text-foreground">{nextMilestone.label}</p>
-                  <p className="font-body text-xs text-muted-foreground">
-                    {nextMilestone.count - exploredCount} more countries to go
-                  </p>
-                  <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-accent rounded-full transition-all duration-700"
-                      style={{ width: `${(exploredCount / nextMilestone.count) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
+          {/* Milestone Timeline */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mb-12 bg-card border border-border rounded-2xl p-6"
+          >
+            <div className="flex items-center gap-2 mb-6">
+              <Sparkles className="h-5 w-5 text-accent" />
+              <h3 className="font-display text-lg font-bold text-foreground">Achievement Timeline</h3>
+            </div>
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              {milestones.map((m, i) => {
+                const achieved = exploredCount >= m.count;
+                const isNext = !achieved && (i === 0 || exploredCount >= milestones[i - 1].count);
+                return (
+                  <motion.div
+                    key={m.label}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.05 }}
+                    className={`flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all min-w-[100px] ${
+                      achieved
+                        ? "border-accent/40 bg-accent/5 glow-gold"
+                        : isNext
+                        ? "border-primary/30 bg-primary/5 animate-pulse-glow"
+                        : "border-border bg-card opacity-50"
+                    }`}
+                  >
+                    <span className={`text-2xl ${achieved ? "" : "grayscale"}`}>{m.emoji}</span>
+                    <span className="font-body text-[10px] font-bold text-center">{m.label}</span>
+                    <span className="font-body text-[9px] text-muted-foreground">{m.count}</span>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
 
           {/* Explored Countries */}
           <section className="mb-16">
             <h2 className="font-display text-2xl font-bold text-foreground mb-6">Explored Countries</h2>
             {loadingExplored ? (
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+                {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-36 rounded-2xl" />)}
               </div>
             ) : exploredCount === 0 ? (
               <div className="bg-card border border-border rounded-2xl p-10 text-center">
@@ -207,31 +230,39 @@ const PassportPage = () => {
               </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                {explored!.map((item: any, i: number) => (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, scale: 0.85 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: i * 0.03, type: "spring" }}
-                    whileHover={{ scale: 1.05, y: -4 }}
-                    className="group bg-card border-2 border-primary/20 rounded-2xl p-4 text-center relative overflow-hidden"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-                    <div className="relative z-10">
-                      <div className="stamp mx-auto w-14 h-14 flex items-center justify-center mb-2">
-                        <span className="text-2xl">{item.country?.flag_emoji}</span>
+                {explored!.map((item: any, i: number) => {
+                  const countryImg = getDishImage("", item.country?.name?.toLowerCase() || "");
+                  return (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, scale: 0.85, rotate: -2 }}
+                      animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                      transition={{ delay: i * 0.03, type: "spring" }}
+                      whileHover={{ scale: 1.05, y: -4, rotate: 1 }}
+                      className="group relative bg-card border-2 border-primary/20 rounded-2xl overflow-hidden"
+                    >
+                      {/* Polaroid-style card */}
+                      {countryImg && (
+                        <div className="aspect-[4/3] overflow-hidden">
+                          <img src={countryImg} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                        </div>
+                      )}
+                      <div className="p-3 text-center relative">
+                        <div className="absolute -top-5 left-1/2 -translate-x-1/2 stamp w-10 h-10 flex items-center justify-center bg-card">
+                          <span className="text-lg">{item.country?.flag_emoji}</span>
+                        </div>
+                        <p className="font-display text-sm font-bold text-foreground mt-3">{item.country?.name}</p>
+                        <p className="font-body text-[10px] text-muted-foreground">{item.country?.region}</p>
+                        <button
+                          onClick={() => toggleExplored.mutate({ countryId: item.country_id, isExplored: true })}
+                          className="mt-2 font-body text-[10px] text-destructive hover:underline opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          Remove
+                        </button>
                       </div>
-                      <p className="font-display text-sm font-bold text-foreground">{item.country?.name}</p>
-                      <p className="font-body text-[10px] text-muted-foreground">{item.country?.region}</p>
-                      <button
-                        onClick={() => toggleExplored.mutate({ countryId: item.country_id, isExplored: true })}
-                        className="mt-2 font-body text-[10px] text-destructive hover:underline opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </div>
             )}
           </section>
@@ -267,7 +298,7 @@ const PassportPage = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: i * 0.05 }}
                       whileHover={{ y: -4 }}
-                      className="group bg-card border border-border rounded-2xl overflow-hidden flex"
+                      className="group bg-card border border-border rounded-2xl overflow-hidden flex hover:shadow-lg transition-all"
                     >
                       <div className="w-28 flex-shrink-0 relative overflow-hidden">
                         <img src={img} alt={item.dish?.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
