@@ -148,7 +148,14 @@ const CountryDetailPanel = ({ country, dishes, dishesLoading, onClose }: Country
   );
 };
 
-const DishCard = ({ dish }: { dish: DishData }) => (
+const DishCard = ({ dish }: { dish: DishData }) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { data: favorites } = useFavoriteDishes();
+  const toggleFavorite = useToggleFavorite();
+  const isFavorited = favorites?.some((f: any) => f.dish_id === dish.id) ?? false;
+
+  return (
   <div className="p-4 bg-background rounded-xl border border-border hover:border-accent/30 transition-all">
     <div className="flex items-start justify-between gap-2">
       <div className="flex-1 min-w-0">
