@@ -167,6 +167,51 @@ export type Database = {
           },
         ]
       }
+      osm_restaurant_cache: {
+        Row: {
+          address: string | null
+          city: string
+          country: string | null
+          cuisine: string | null
+          fetched_at: string
+          lat: number
+          lng: number
+          name: string
+          opening_hours: string | null
+          osm_id: number
+          phone: string | null
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          city: string
+          country?: string | null
+          cuisine?: string | null
+          fetched_at?: string
+          lat: number
+          lng: number
+          name: string
+          opening_hours?: string | null
+          osm_id: number
+          phone?: string | null
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string
+          country?: string | null
+          cuisine?: string | null
+          fetched_at?: string
+          lat?: number
+          lng?: number
+          name?: string
+          opening_hours?: string | null
+          osm_id?: number
+          phone?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
