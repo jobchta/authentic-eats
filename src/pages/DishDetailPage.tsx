@@ -148,7 +148,7 @@ const DishDetailPage = () => {
           <div className="container mx-auto px-4 mt-8">
             <div className="flex flex-wrap gap-2">
               {dish.dietary_tags?.map((tag) => (
-                <Badge key={tag} className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300 font-body text-xs">{tag}</Badge>
+                <Badge key={tag} className="bg-secondary text-secondary-foreground font-body text-xs">{tag}</Badge>
               ))}
               {dish.tags?.map((tag) => (
                 <Badge key={tag} variant="secondary" className="font-body text-xs">{tag}</Badge>

@@ -180,8 +180,8 @@ const RestaurantDetailPage = () => {
                   <p className="font-body text-xs text-muted-foreground">{restaurant.country.region} · {restaurant.country.continent}</p>
                 </div>
               </div>
-              {restaurant.country.food_culture_summary && (
-                <p className="font-body text-sm text-muted-foreground">{restaurant.country.food_culture_summary}</p>
+              {(restaurant.country as any).food_culture_summary && (
+                <p className="font-body text-sm text-muted-foreground">{(restaurant.country as any).food_culture_summary}</p>
               )}
             </div>
           </div>
