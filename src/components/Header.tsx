@@ -1,16 +1,21 @@
-import { Search, User, Menu, Crown, LogOut, Compass, X } from "lucide-react";
+import { Search, User, Menu, Crown, LogOut, Compass, X, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { theme, setTheme } = useTheme();
+
+  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -33,6 +38,7 @@ const Header = () => {
   };
 
   const userInitial = user?.email?.charAt(0).toUpperCase() || "U";
+  const isDark = theme === "dark";
 
   return (
     <>
@@ -106,6 +112,41 @@ const Header = () => {
           </nav>
 
           <div className="flex items-center gap-2">
+            {/* Dark mode toggle */}
+            {mounted && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(isDark ? "light" : "dark")}
+                className="text-muted-foreground hover:text-foreground relative overflow-hidden"
+                aria-label="Toggle theme"
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  {isDark ? (
+                    <motion.div
+                      key="sun"
+                      initial={{ y: -20, opacity: 0, rotate: -90 }}
+                      animate={{ y: 0, opacity: 1, rotate: 0 }}
+                      exit={{ y: 20, opacity: 0, rotate: 90 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Sun className="h-4 w-4" />
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="moon"
+                      initial={{ y: -20, opacity: 0, rotate: 90 }}
+                      animate={{ y: 0, opacity: 1, rotate: 0 }}
+                      exit={{ y: 20, opacity: 0, rotate: -90 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <Moon className="h-4 w-4" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </Button>
+            )}
+
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
               <Search className="h-4 w-4" />
             </Button>
@@ -216,6 +257,21 @@ const Header = () => {
                   >
                     🏪 For Restaurants
                   </Link>
+                </motion.div>
+
+                {/* Mobile dark mode toggle */}
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <button
+                    onClick={() => setTheme(isDark ? "light" : "dark")}
+                    className="flex items-center gap-3 w-full font-body text-base font-medium text-foreground py-3 px-3 rounded-xl hover:bg-muted transition-colors"
+                  >
+                    {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                    {isDark ? "Light Mode" : "Dark Mode"}
+                  </button>
                 </motion.div>
               </div>
               <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
