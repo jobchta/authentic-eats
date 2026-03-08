@@ -5,7 +5,7 @@ import { useHomepageDishes } from "@/hooks/use-homepage-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useFavoriteDishes, useToggleFavorite } from "@/hooks/use-passport";
 import { useNavigate } from "react-router-dom";
-import { getDishImage, allDishImages } from "@/lib/dish-images";
+import { getDishImage, continentGradients } from "@/lib/dish-images";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function TiltCard({ children, className }: { children: React.ReactNode; className?: string }) {
@@ -81,9 +81,10 @@ const TrendingSection = () => {
           ) : (
             <div className="marquee-track">
               {marqueeItems.map((dish, i) => {
-                const img = getDishImage(dish.name, dish.cuisine_type) || allDishImages[i % allDishImages.length];
+                const img = getDishImage(dish.name, dish.cuisine_type);
                 const isFavorited = favorites?.some((f: any) => f.dish_id === dish.id) ?? false;
                 const rank = (i % trendingDishes.length) + 1;
+                const gradient = continentGradients[dish.country?.continent] || "from-muted to-muted";
 
                 return (
                   <TiltCard
@@ -91,12 +92,18 @@ const TrendingSection = () => {
                     className="flex-shrink-0 w-[340px] cursor-pointer perspective-[800px]"
                   >
                     <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-lg group">
-                      <img
-                        src={img}
-                        alt={dish.name}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                        loading="lazy"
-                      />
+                      {img ? (
+                        <img
+                          src={img}
+                          alt={dish.name}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className={`w-full h-full bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+                          <span className="text-6xl opacity-30">🍽️</span>
+                        </div>
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10" />
                       <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 bg-gradient-to-tr from-transparent via-white/5 to-transparent" />
 

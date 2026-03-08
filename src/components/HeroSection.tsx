@@ -67,16 +67,16 @@ const HeroSection = () => {
 
   return (
     <section className="relative h-[100vh] min-h-[700px] flex items-end overflow-hidden">
-      {/* Crossfading background images */}
-      {allDishImages.map((img, i) => (
+      {/* Crossfading background images — only use 5 for performance */}
+      {allDishImages.slice(0, 5).map((img, i) => (
         <motion.img
           key={i}
           src={img}
           alt=""
           initial={false}
           animate={{
-            opacity: bgIndex === i ? 1 : 0,
-            scale: bgIndex === i ? 1.05 : 1.15,
+            opacity: bgIndex % 5 === i ? 1 : 0,
+            scale: bgIndex % 5 === i ? 1.05 : 1.15,
           }}
           transition={{ duration: 2, ease: "easeInOut" }}
           className="absolute inset-0 w-full h-full object-cover"
@@ -155,7 +155,7 @@ const HeroSection = () => {
             The World's Authentic Food Guide
           </motion.p>
 
-          <div className="h-[160px] md:h-[220px] relative overflow-hidden mb-8">
+          <div className="min-h-[140px] md:min-h-[200px] relative mb-8">
             <AnimatePresence mode="wait">
               <motion.h1
                 key={current}
