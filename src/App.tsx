@@ -13,6 +13,7 @@ import MapPage from "./pages/MapPage";
 import AuthPage from "./pages/AuthPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import PassportPage from "./pages/PassportPage";
+import RestaurantsPage from "./pages/RestaurantsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const AnimatedRoutes = () => {
         <Route path="/auth" element={<PageTransition><AuthPage /></PageTransition>} />
         <Route path="/reset-password" element={<PageTransition><ResetPasswordPage /></PageTransition>} />
         <Route path="/passport" element={<PageTransition><PassportPage /></PageTransition>} />
+        <Route path="/restaurants" element={<PageTransition><RestaurantsPage /></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>

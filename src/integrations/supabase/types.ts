@@ -194,6 +194,77 @@ export type Database = {
         }
         Relationships: []
       }
+      restaurants: {
+        Row: {
+          address: string | null
+          city: string
+          country_id: string
+          created_at: string | null
+          cuisine_type: string
+          description: string | null
+          id: string
+          is_featured: boolean | null
+          michelin_stars: number | null
+          name: string
+          price_range: string | null
+          rating: number | null
+          reviews_count: number | null
+          speciality: string | null
+          tags: string[] | null
+          tier: string
+          website_url: string | null
+          year_established: number | null
+        }
+        Insert: {
+          address?: string | null
+          city: string
+          country_id: string
+          created_at?: string | null
+          cuisine_type: string
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          michelin_stars?: number | null
+          name: string
+          price_range?: string | null
+          rating?: number | null
+          reviews_count?: number | null
+          speciality?: string | null
+          tags?: string[] | null
+          tier?: string
+          website_url?: string | null
+          year_established?: number | null
+        }
+        Update: {
+          address?: string | null
+          city?: string
+          country_id?: string
+          created_at?: string | null
+          cuisine_type?: string
+          description?: string | null
+          id?: string
+          is_featured?: boolean | null
+          michelin_stars?: number | null
+          name?: string
+          price_range?: string | null
+          rating?: number | null
+          reviews_count?: number | null
+          speciality?: string | null
+          tags?: string[] | null
+          tier?: string
+          website_url?: string | null
+          year_established?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "restaurants_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
