@@ -71,6 +71,20 @@ const CountryDetailPanel = ({ country, dishes, dishesLoading, onClose }: Country
             </span>
           </div>
         )}
+        <div className="mt-4">
+          <Button
+            variant={isExplored ? "outline" : "default"}
+            size="sm"
+            className="w-full font-body text-xs"
+            onClick={() => {
+              if (!user) { navigate("/auth"); return; }
+              toggleExplored.mutate({ countryId: country.id, isExplored });
+            }}
+          >
+            <Globe className="h-3.5 w-3.5 mr-1.5" />
+            {isExplored ? "Explored ✓" : "Mark as Explored"}
+          </Button>
+        </div>
       </div>
 
       {/* Food culture */}
