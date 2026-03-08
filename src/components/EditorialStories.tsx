@@ -14,11 +14,12 @@ const stories = [
   },
   {
     image: dishPaella,
-    category: "Origin Story",
+    category: "Sponsored",
     title: "Why Authentic Paella Has No Chorizo",
     excerpt: "The great Spanish debate: what belongs in a real paella? Valencia's oldest cooks set the record straight.",
     author: "Carlos Martínez",
     readTime: "5 min read",
+    sponsored: true,
   },
   {
     image: dishTagine,
