@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Award, MapPin, Search, Filter, ChefHat, Globe, Flame, ExternalLink } from "lucide-react";
+import { Star, Award, MapPin, Search, Filter, ChefHat, Globe, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { useRestaurants, useRestaurantStats } from "@/hooks/use-restaurants";
+import OsmRestaurantCard from "@/components/OsmRestaurantCard";
+import { useRestaurantsPaginated, useRestaurantStats } from "@/hooks/use-restaurants";
+import { useOsmRestaurants } from "@/hooks/use-osm-restaurants";
 
 const tierConfig: Record<string, { classes: string; icon: boolean; glow?: boolean }> = {
   Legendary: { classes: "badge-gold", icon: true, glow: true },
@@ -27,29 +29,28 @@ const RestaurantsPage = () => {
   const [activePrice, setActivePrice] = useState("All");
   const [search, setSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [citySearch, setCitySearch] = useState("");
 
-  const { data: restaurants, isLoading } = useRestaurants();
+  const filters = useMemo(
+    () => ({ tier: activeTier, continent: activeContinent, price: activePrice, search }),
+    [activeTier, activeContinent, activePrice, search]
+  );
+
+  const {
+    data: pages,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useRestaurantsPaginated(filters);
+
   const { data: stats } = useRestaurantStats();
+  const { data: osmData, isLoading: osmLoading, isError: osmError } = useOsmRestaurants(citySearch);
 
-  const filtered = useMemo(() => {
-    if (!restaurants) return [];
-    return restaurants.filter((r) => {
-      if (activeTier !== "All" && r.tier !== activeTier) return false;
-      if (activeContinent !== "All" && r.country?.continent !== activeContinent) return false;
-      if (activePrice !== "All" && r.price_range !== activePrice) return false;
-      if (search) {
-        const q = search.toLowerCase();
-        return (
-          r.name.toLowerCase().includes(q) ||
-          r.cuisine_type.toLowerCase().includes(q) ||
-          r.city.toLowerCase().includes(q) ||
-          r.country?.name?.toLowerCase().includes(q) ||
-          r.speciality?.toLowerCase().includes(q)
-        );
-      }
-      return true;
-    });
-  }, [restaurants, activeTier, activeContinent, activePrice, search]);
+  const allRestaurants = useMemo(
+    () => pages?.pages.flatMap((p) => p.items) || [],
+    [pages]
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -67,17 +68,15 @@ const RestaurantsPage = () => {
                   <ChefHat className="h-6 w-6 text-accent" />
                 </div>
                 <Badge className="badge-gold text-xs px-3 py-1">
-                  {stats?.total || "100"}+ Verified
+                  {stats?.total || "100"}+ Curated · 15M+ Discoverable
                 </Badge>
               </div>
               <h1 className="font-display text-5xl md:text-7xl font-bold text-primary-foreground leading-[1.05] mb-4">
                 World's Finest<br />Restaurants
               </h1>
               <p className="font-body text-primary-foreground/60 max-w-lg text-lg">
-                From Michelin-starred temples to legendary street stalls. Every restaurant visited, rated, and ranked by our global critics.
+                From Michelin-starred temples to legendary street stalls. Browse our curated collection or search any city on Earth for live restaurant discovery.
               </p>
-
-              {/* Stats row */}
               <div className="flex flex-wrap gap-6 mt-8">
                 {[
                   { label: "Legendary", value: stats?.tiers?.Legendary || 0 },
@@ -102,10 +101,19 @@ const RestaurantsPage = () => {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search restaurants, cuisines, cities..."
+                  placeholder="Filter curated restaurants..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-10 font-body"
+                />
+              </div>
+              <div className="relative flex-1">
+                <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-accent" />
+                <Input
+                  placeholder="Search any city on Earth (e.g. Tokyo, Lagos, Lima)..."
+                  value={citySearch}
+                  onChange={(e) => setCitySearch(e.target.value)}
+                  className="pl-10 font-body border-accent/30 focus-visible:ring-accent"
                 />
               </div>
               <Button
@@ -118,7 +126,7 @@ const RestaurantsPage = () => {
               </Button>
             </div>
 
-            {/* Tier filter always visible */}
+            {/* Tier filter */}
             <div className="flex gap-2 flex-wrap mb-3">
               {tiers.map((tier) => (
                 <button
@@ -184,110 +192,197 @@ const RestaurantsPage = () => {
             </AnimatePresence>
 
             <p className="font-body text-xs text-muted-foreground mt-3">
-              Showing {filtered.length} restaurant{filtered.length !== 1 ? "s" : ""}
+              Showing {allRestaurants.length} curated restaurant{allRestaurants.length !== 1 ? "s" : ""}
+              {hasNextPage ? "+" : ""}
             </p>
           </div>
         </div>
 
-        {/* Results */}
+        {/* OSM Live Discovery Section */}
+        {citySearch.length >= 2 && (
+          <div className="container mx-auto px-4 mt-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Globe className="h-5 w-5 text-accent" />
+              <h2 className="font-display text-xl font-bold text-foreground">
+                Live Discovery: {citySearch}
+              </h2>
+              {osmLoading && <Loader2 className="h-4 w-4 animate-spin text-accent" />}
+            </div>
+
+            {osmLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-28 rounded-xl" />
+                ))}
+              </div>
+            ) : osmError ? (
+              <p className="font-body text-sm text-muted-foreground">
+                Could not reach discovery service. Try again in a moment.
+              </p>
+            ) : osmData && osmData.results.length > 0 ? (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {osmData.results.map((r, i) => (
+                    <OsmRestaurantCard key={r.osm_id} restaurant={r} index={i} />
+                  ))}
+                </div>
+                {osmData.attribution && (
+                  <p className="font-body text-[10px] text-muted-foreground/50 mt-3">
+                    Data: {osmData.attribution}
+                  </p>
+                )}
+              </>
+            ) : osmData ? (
+              <p className="font-body text-sm text-muted-foreground">
+                No restaurants found for "{citySearch}". Try a different city name.
+              </p>
+            ) : null}
+          </div>
+        )}
+
+        {/* Curated Results */}
         <div className="container mx-auto px-4 mt-8">
+          <div className="flex items-center gap-3 mb-4">
+            <ChefHat className="h-5 w-5 text-foreground" />
+            <h2 className="font-display text-xl font-bold text-foreground">Curated Collection</h2>
+          </div>
+
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {Array.from({ length: 8 }).map((_, i) => (
                 <Skeleton key={i} className="h-32 rounded-xl" />
               ))}
             </div>
-          ) : filtered.length === 0 ? (
+          ) : allRestaurants.length === 0 ? (
             <div className="text-center py-20">
               <Globe className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
               <p className="font-body text-muted-foreground">No restaurants match your filters.</p>
-              <Button variant="outline" size="sm" className="mt-4 font-body" onClick={() => { setActiveTier("All"); setActiveContinent("All"); setActivePrice("All"); setSearch(""); }}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-4 font-body"
+                onClick={() => {
+                  setActiveTier("All");
+                  setActiveContinent("All");
+                  setActivePrice("All");
+                  setSearch("");
+                }}
+              >
                 Clear Filters
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <AnimatePresence mode="popLayout">
-                {filtered.map((restaurant, index) => {
-                  const isLegendary = restaurant.tier === "Legendary";
-                  return (
-                    <Link key={restaurant.id} to={`/restaurants/${restaurant.id}`}>
-                    <motion.article
-                      layout
-                      initial={{ opacity: 0, y: 15 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ delay: Math.min(index * 0.03, 0.3) }}
-                      whileHover={{ y: -4 }}
-                      className={`flex gap-4 p-5 bg-card rounded-xl border cursor-pointer transition-all duration-500 hover:shadow-xl relative overflow-hidden ${
-                        isLegendary ? "border-accent/30 glow-gold" : "border-border"
-                      }`}
-                    >
-                      {isLegendary && (
-                        <div className="absolute inset-0 shimmer pointer-events-none" />
-                      )}
-
-                      <div className={`flex-shrink-0 w-14 h-14 rounded-2xl flex flex-col items-center justify-center ${
-                        isLegendary ? "bg-gradient-to-br from-accent to-accent/60" : "bg-muted"
-                      }`}>
-                        <span className={`font-display text-lg font-bold ${
-                          isLegendary ? "text-accent-foreground" : "text-foreground"
-                        }`}>
-                          #{index + 1}
-                        </span>
-                        {(restaurant.michelin_stars ?? 0) > 0 && (
-                          <div className="flex gap-0.5 mt-0.5">
-                            {Array.from({ length: restaurant.michelin_stars! }).map((_, i) => (
-                              <Star key={i} className="h-2 w-2 fill-accent text-accent" />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0 relative z-10">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <h3 className="font-display text-base font-semibold text-foreground truncate">
-                            {restaurant.name}
-                          </h3>
-                          <Badge className={`text-[9px] font-body shrink-0 ${tierConfig[restaurant.tier]?.classes || ""}`}>
-                            {tierConfig[restaurant.tier]?.icon && <Award className="h-2.5 w-2.5 mr-0.5" />}
-                            {restaurant.tier}
-                          </Badge>
-                        </div>
-                        <p className="font-body text-xs text-muted-foreground mb-2">
-                          {restaurant.speciality} · {restaurant.cuisine_type}
-                        </p>
-                        {restaurant.description && (
-                          <p className="font-body text-xs text-muted-foreground/70 line-clamp-1 mb-2">
-                            {restaurant.description}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-4 flex-wrap">
-                          <div className="flex items-center gap-1 text-accent">
-                            <Star className="h-3 w-3 fill-current" />
-                            <span className="font-body text-xs font-bold">{restaurant.rating?.toFixed(2)}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-muted-foreground">
-                            <MapPin className="h-3 w-3" />
-                            <span className="font-body text-[11px]">
-                              {restaurant.city}, {restaurant.country?.name}
-                              {restaurant.country?.flag_emoji && ` ${restaurant.country.flag_emoji}`}
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <AnimatePresence mode="popLayout">
+                  {allRestaurants.map((restaurant, index) => {
+                    const isLegendary = restaurant.tier === "Legendary";
+                    return (
+                      <Link key={restaurant.id} to={`/restaurants/${restaurant.id}`}>
+                        <motion.article
+                          layout
+                          initial={{ opacity: 0, y: 15 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          transition={{ delay: Math.min(index * 0.03, 0.3) }}
+                          whileHover={{ y: -4 }}
+                          className={`flex gap-4 p-5 bg-card rounded-xl border cursor-pointer transition-all duration-500 hover:shadow-xl relative overflow-hidden ${
+                            isLegendary ? "border-accent/30 glow-gold" : "border-border"
+                          }`}
+                        >
+                          {isLegendary && (
+                            <div className="absolute inset-0 shimmer pointer-events-none" />
+                          )}
+                          <div
+                            className={`flex-shrink-0 w-14 h-14 rounded-2xl flex flex-col items-center justify-center ${
+                              isLegendary ? "bg-gradient-to-br from-accent to-accent/60" : "bg-muted"
+                            }`}
+                          >
+                            <span
+                              className={`font-display text-lg font-bold ${
+                                isLegendary ? "text-accent-foreground" : "text-foreground"
+                              }`}
+                            >
+                              #{index + 1}
                             </span>
+                            {(restaurant.michelin_stars ?? 0) > 0 && (
+                              <div className="flex gap-0.5 mt-0.5">
+                                {Array.from({ length: restaurant.michelin_stars! }).map((_, i) => (
+                                  <Star key={i} className="h-2 w-2 fill-accent text-accent" />
+                                ))}
+                              </div>
+                            )}
                           </div>
-                          <span className="font-body text-[11px] text-muted-foreground">
-                            {(restaurant.reviews_count ?? 0).toLocaleString()} reviews
-                          </span>
-                          <span className="font-body text-[11px] text-accent font-semibold">
-                            {restaurant.price_range}
-                          </span>
-                        </div>
-                      </div>
-                    </motion.article>
-                    </Link>
-                  );
-                })}
-              </AnimatePresence>
-            </div>
+
+                          <div className="flex-1 min-w-0 relative z-10">
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <h3 className="font-display text-base font-semibold text-foreground truncate">
+                                {restaurant.name}
+                              </h3>
+                              <Badge
+                                className={`text-[9px] font-body shrink-0 ${tierConfig[restaurant.tier]?.classes || ""}`}
+                              >
+                                {tierConfig[restaurant.tier]?.icon && <Award className="h-2.5 w-2.5 mr-0.5" />}
+                                {restaurant.tier}
+                              </Badge>
+                            </div>
+                            <p className="font-body text-xs text-muted-foreground mb-2">
+                              {restaurant.speciality} · {restaurant.cuisine_type}
+                            </p>
+                            {restaurant.description && (
+                              <p className="font-body text-xs text-muted-foreground/70 line-clamp-1 mb-2">
+                                {restaurant.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-4 flex-wrap">
+                              <div className="flex items-center gap-1 text-accent">
+                                <Star className="h-3 w-3 fill-current" />
+                                <span className="font-body text-xs font-bold">
+                                  {restaurant.rating?.toFixed(2)}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <MapPin className="h-3 w-3" />
+                                <span className="font-body text-[11px]">
+                                  {restaurant.city}, {restaurant.country?.name}
+                                  {restaurant.country?.flag_emoji && ` ${restaurant.country.flag_emoji}`}
+                                </span>
+                              </div>
+                              <span className="font-body text-[11px] text-muted-foreground">
+                                {(restaurant.reviews_count ?? 0).toLocaleString()} reviews
+                              </span>
+                              <span className="font-body text-[11px] text-accent font-semibold">
+                                {restaurant.price_range}
+                              </span>
+                            </div>
+                          </div>
+                        </motion.article>
+                      </Link>
+                    );
+                  })}
+                </AnimatePresence>
+              </div>
+
+              {hasNextPage && (
+                <div className="flex justify-center mt-8">
+                  <Button
+                    variant="outline"
+                    onClick={() => fetchNextPage()}
+                    disabled={isFetchingNextPage}
+                    className="font-body gap-2"
+                  >
+                    {isFetchingNextPage ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Loading...
+                      </>
+                    ) : (
+                      "Load More Restaurants"
+                    )}
+                  </Button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>
