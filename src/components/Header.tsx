@@ -12,6 +12,7 @@ const Header = () => {
     { label: "Restaurants", href: "/#restaurants" },
     { label: "Cuisines", href: "/#cuisines" },
     { label: "Stories", href: "/#stories" },
+    { label: "Food Map", href: "/map" },
     { label: "Pricing", href: "/pricing" },
   ];
 
