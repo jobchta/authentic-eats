@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
-import { Search } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Search, ChevronDown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import heroImage from "@/assets/hero-food.jpg";
+import { allDishImages } from "@/lib/dish-images";
 
 const headlines = [
   { top: "Discover Food", bottom: "Worth Traveling For" },
@@ -11,32 +11,112 @@ const headlines = [
   { top: "Find Your Next", bottom: "Unforgettable Meal" },
 ];
 
+const typewriterPhrases = [
+  "Search ramen in Tokyo...",
+  "Find tacos in Mexico City...",
+  "Discover pasta in Naples...",
+  "Explore curry in Delhi...",
+  "Try phở in Hanoi...",
+];
+
+const floatingEmojis = ["🍜", "🌮", "🍕", "🥘", "🍣", "🥐", "🍛", "🥩", "🍲", "🧆"];
+
 const HeroSection = () => {
   const [current, setCurrent] = useState(0);
+  const [bgIndex, setBgIndex] = useState(0);
+  const [placeholder, setPlaceholder] = useState("");
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [charIndex, setCharIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
 
+  // Headline rotation
   useEffect(() => {
     const timer = setInterval(() => setCurrent((c) => (c + 1) % headlines.length), 5000);
     return () => clearInterval(timer);
   }, []);
 
+  // Background image crossfade
+  useEffect(() => {
+    const timer = setInterval(() => setBgIndex((i) => (i + 1) % allDishImages.length), 6000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Typewriter effect
+  useEffect(() => {
+    const phrase = typewriterPhrases[phraseIndex];
+    const timeout = setTimeout(() => {
+      if (!isDeleting) {
+        if (charIndex < phrase.length) {
+          setPlaceholder(phrase.slice(0, charIndex + 1));
+          setCharIndex(charIndex + 1);
+        } else {
+          setTimeout(() => setIsDeleting(true), 2000);
+        }
+      } else {
+        if (charIndex > 0) {
+          setPlaceholder(phrase.slice(0, charIndex - 1));
+          setCharIndex(charIndex - 1);
+        } else {
+          setIsDeleting(false);
+          setPhraseIndex((phraseIndex + 1) % typewriterPhrases.length);
+        }
+      }
+    }, isDeleting ? 30 : 60);
+    return () => clearTimeout(timeout);
+  }, [charIndex, isDeleting, phraseIndex]);
+
   return (
     <section className="relative h-[100vh] min-h-[700px] flex items-end overflow-hidden">
-      {/* Parallax image with subtle zoom */}
-      <motion.img
-        initial={{ scale: 1.15 }}
-        animate={{ scale: 1.05 }}
-        transition={{ duration: 20, ease: "linear", repeat: Infinity, repeatType: "reverse" }}
-        src={heroImage}
-        alt="Beautifully plated authentic cuisine"
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      {/* Crossfading background images */}
+      {allDishImages.map((img, i) => (
+        <motion.img
+          key={i}
+          src={img}
+          alt=""
+          initial={false}
+          animate={{
+            opacity: bgIndex === i ? 1 : 0,
+            scale: bgIndex === i ? 1.05 : 1.15,
+          }}
+          transition={{ duration: 2, ease: "easeInOut" }}
+          className="absolute inset-0 w-full h-full object-cover"
+          loading={i < 2 ? "eager" : "lazy"}
+        />
+      ))}
       <div className="hero-overlay absolute inset-0" />
 
-      {/* Ambient light effects */}
+      {/* Ambient lights */}
       <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-accent/8 rounded-full blur-[200px] pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-primary/10 rounded-full blur-[150px] pointer-events-none" />
 
-      {/* Floating stats with glass effect */}
+      {/* Floating food emojis */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {floatingEmojis.map((emoji, i) => (
+          <motion.span
+            key={i}
+            className="absolute text-2xl opacity-20"
+            style={{
+              left: `${5 + i * 9.5}%`,
+              bottom: `-40px`,
+            }}
+            animate={{
+              y: [0, -window.innerHeight - 100],
+              x: [0, Math.sin(i) * 50],
+              rotate: [0, 360],
+            }}
+            transition={{
+              duration: 12 + i * 2,
+              repeat: Infinity,
+              delay: i * 1.5,
+              ease: "linear",
+            }}
+          >
+            {emoji}
+          </motion.span>
+        ))}
+      </div>
+
+      {/* Floating stats */}
       <div className="absolute top-24 right-8 hidden lg:flex flex-col gap-3 z-10">
         {[
           { label: "Dishes catalogued", value: "38,400+" },
@@ -50,13 +130,16 @@ const HeroSection = () => {
             transition={{ delay: 1.2 + i * 0.15, duration: 0.6, type: "spring" }}
             className="glass-dark rounded-xl px-5 py-4 text-right hover:bg-white/10 transition-colors group"
           >
-            <p className="font-display text-2xl font-bold text-primary-foreground group-hover:text-accent transition-colors">{stat.value}</p>
+            <p className="font-display text-2xl font-bold text-primary-foreground group-hover:text-gradient-gold transition-colors">
+              {stat.value}
+            </p>
             <p className="font-body text-xs text-primary-foreground/50">{stat.label}</p>
           </motion.div>
         ))}
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 pb-24">
+      {/* Main content */}
+      <div className="relative z-10 container mx-auto px-4 pb-28">
         <motion.div
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
@@ -76,10 +159,10 @@ const HeroSection = () => {
             <AnimatePresence mode="wait">
               <motion.h1
                 key={current}
-                initial={{ opacity: 0, y: 40, rotateX: -15 }}
+                initial={{ opacity: 0, y: 50, rotateX: -20 }}
                 animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                exit={{ opacity: 0, y: -40, rotateX: 15 }}
-                transition={{ duration: 0.7, ease: [0.25, 0.4, 0.25, 1] }}
+                exit={{ opacity: 0, y: -50, rotateX: 20 }}
+                transition={{ duration: 0.8, ease: [0.25, 0.4, 0.25, 1] }}
                 className="font-display text-5xl md:text-7xl lg:text-8xl font-bold text-primary-foreground leading-[1.05] text-shadow-hero"
               >
                 {headlines[current].top}
@@ -104,14 +187,15 @@ const HeroSection = () => {
             transition={{ delay: 0.8, duration: 0.6 }}
             className="flex flex-col sm:flex-row gap-3 max-w-xl"
           >
-            <div className="relative flex-1">
+            <div className="relative flex-1 group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
-                placeholder="Search dishes, cuisines, cities..."
-                className="pl-12 h-14 text-base bg-background/95 backdrop-blur-md border-border font-body rounded-xl shadow-lg"
+                placeholder={placeholder}
+                className="pl-12 h-14 text-base bg-background/95 backdrop-blur-md border-border font-body rounded-xl shadow-lg focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
               />
+              <div className="absolute inset-0 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none glow-gold" />
             </div>
-            <Button className="h-14 px-10 font-body font-bold text-base rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+            <Button className="h-14 px-10 font-body font-bold text-base rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all">
               Explore
             </Button>
           </motion.div>
@@ -137,8 +221,21 @@ const HeroSection = () => {
         </motion.div>
       </div>
 
-      {/* Bottom fade to next section */}
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
+      {/* Scroll indicator */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 2 }}
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2"
+      >
+        <span className="font-body text-[10px] uppercase tracking-[0.3em] text-primary-foreground/40">
+          Scroll
+        </span>
+        <ChevronDown className="h-4 w-4 text-primary-foreground/40 animate-bounce-down" />
+      </motion.div>
+
+      {/* Bottom fade */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent z-10 pointer-events-none" />
     </section>
   );
 };

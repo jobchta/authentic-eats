@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, MapPin, Heart, Flame } from "lucide-react";
+import { Star, MapPin, Heart, Flame, Eye } from "lucide-react";
 import { useHomepageDishes } from "@/hooks/use-homepage-data";
 import { useAuth } from "@/hooks/use-auth";
 import { useFavoriteDishes, useToggleFavorite } from "@/hooks/use-passport";
@@ -65,7 +65,7 @@ const FeaturedDishes = () => {
         {isLoading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="bg-background rounded-2xl overflow-hidden border border-border">
+              <div key={i} className="bg-background rounded-2xl overflow-hidden border border-border shimmer">
                 <Skeleton className="aspect-[4/3]" />
                 <div className="p-5 space-y-3">
                   <Skeleton className="h-5 w-3/4" />
@@ -81,6 +81,7 @@ const FeaturedDishes = () => {
               {filtered.map((dish, i) => {
                 const img = getDishImage(dish.name, dish.cuisine_type) || allDishImages[i % allDishImages.length];
                 const isFavorited = favorites?.some((f: any) => f.dish_id === dish.id) ?? false;
+                const isHero = i === 0;
 
                 return (
                   <motion.article
@@ -90,37 +91,49 @@ const FeaturedDishes = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ delay: i * 0.04, type: "spring", stiffness: 300, damping: 25 }}
-                    whileHover={{ y: -8 }}
-                    className="group bg-background rounded-2xl overflow-hidden border border-border cursor-pointer shadow-sm hover:shadow-xl transition-shadow duration-500"
+                    className={`group bg-background rounded-2xl overflow-hidden border border-border cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 ${
+                      isHero ? "sm:col-span-2 sm:row-span-1" : ""
+                    }`}
                   >
-                    <div className="relative aspect-[4/3] overflow-hidden">
+                    <div className={`relative overflow-hidden ${isHero ? "aspect-[16/9]" : "aspect-[4/3]"}`}>
                       <img
                         src={img}
                         alt={dish.name}
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         loading="lazy"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                      {/* Hover overlay with description */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-5">
+                        <p className="font-body text-sm text-white/90 line-clamp-3 mb-2">
+                          {dish.description}
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(dish.dietary_tags ?? []).map((tag) => (
+                            <span key={tag} className="text-[10px] font-body font-medium text-white bg-white/20 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
 
                       <div className="absolute top-3 left-3 flex gap-2">
                         <span className="bg-primary/90 backdrop-blur-md text-primary-foreground text-[10px] font-body font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
                           {dish.cuisine_type}
                         </span>
                         {dish.is_signature && (
-                          <span className="bg-accent/90 backdrop-blur-md text-accent-foreground text-[10px] font-body font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
+                          <span className="badge-gold text-[10px] font-body px-3 py-1 rounded-full uppercase tracking-wider shadow-md">
                             ★ Signature
                           </span>
                         )}
                       </div>
 
-                      {/* Favorite button */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           if (!user) { navigate("/auth"); return; }
                           toggleFavorite.mutate({ dishId: dish.id, isFavorited });
                         }}
-                        className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-110 ${
+                        className={`absolute top-3 right-3 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 hover:scale-110 ${
                           isFavorited
                             ? "bg-destructive/20 text-destructive"
                             : "bg-black/20 text-white/70 opacity-0 group-hover:opacity-100 hover:text-destructive"
@@ -129,7 +142,6 @@ const FeaturedDishes = () => {
                         <Heart className={`h-4 w-4 ${isFavorited ? "fill-current" : ""}`} />
                       </button>
 
-                      {/* Spice indicator */}
                       {dish.spice_level && dish.spice_level >= 3 && (
                         <div className="absolute bottom-3 right-3 flex items-center gap-0.5 bg-black/40 backdrop-blur-sm rounded-full px-2 py-1">
                           {Array.from({ length: dish.spice_level }).map((_, j) => (
