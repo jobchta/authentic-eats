@@ -93,12 +93,37 @@ export default {
           from: { opacity: "0" },
           to: { opacity: "1" },
         },
+        "count-up": {
+          from: { opacity: "0", transform: "translateY(20px) scale(0.9)" },
+          to: { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        "slide-up-fade": {
+          from: { opacity: "0", transform: "translateY(40px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+        "scale-in": {
+          from: { opacity: "0", transform: "scale(0.9)" },
+          to: { opacity: "1", transform: "scale(1)" },
+        },
+        "pulse-glow": {
+          "0%, 100%": { boxShadow: "0 0 20px hsla(38, 70%, 50%, 0.15)" },
+          "50%": { boxShadow: "0 0 40px hsla(38, 70%, 50%, 0.3)" },
+        },
+        "spin-slow": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-up": "fade-up 0.8s ease-out forwards",
         "fade-in": "fade-in 0.6s ease-out forwards",
+        "count-up": "count-up 0.6s ease-out forwards",
+        "slide-up-fade": "slide-up-fade 0.7s ease-out forwards",
+        "scale-in": "scale-in 0.4s ease-out forwards",
+        "pulse-glow": "pulse-glow 3s ease-in-out infinite",
+        "spin-slow": "spin-slow 20s linear infinite",
       },
     },
   },
