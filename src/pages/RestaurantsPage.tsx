@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Star, Award, MapPin, Search, Filter, ChefHat, Globe, Flame, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -210,8 +211,8 @@ const RestaurantsPage = () => {
                 {filtered.map((restaurant, index) => {
                   const isLegendary = restaurant.tier === "Legendary";
                   return (
+                    <Link key={restaurant.id} to={`/restaurants/${restaurant.id}`}>
                     <motion.article
-                      key={restaurant.id}
                       layout
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -282,6 +283,7 @@ const RestaurantsPage = () => {
                         </div>
                       </div>
                     </motion.article>
+                    </Link>
                   );
                 })}
               </AnimatePresence>

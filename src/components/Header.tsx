@@ -25,9 +25,9 @@ const Header = () => {
 
   const navLinks = [
     { label: "Dishes", href: "/#dishes" },
-    { label: "Restaurants", href: "/#restaurants" },
+    { label: "Restaurants", href: "/restaurants" },
     { label: "Cuisines", href: "/#cuisines" },
-    { label: "Stories", href: "/#stories" },
+    { label: "What to Eat?", href: "/recommend" },
     { label: "Food Map", href: "/map" },
     { label: "Pricing", href: "/pricing" },
   ];
