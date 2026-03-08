@@ -14,6 +14,9 @@ import AuthPage from "./pages/AuthPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import PassportPage from "./pages/PassportPage";
 import RestaurantsPage from "./pages/RestaurantsPage";
+import RestaurantDetailPage from "./pages/RestaurantDetailPage";
+import DishDetailPage from "./pages/DishDetailPage";
+import RecommenderPage from "./pages/RecommenderPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
