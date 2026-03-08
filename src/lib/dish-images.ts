@@ -69,10 +69,10 @@ const nameMap: Record<string, string> = {
   vindaloo: dishButterChicken,
   korma: dishButterChicken,
   chana: dishButterChicken,
-  rogan josh: dishButterChicken,
+  "rogan josh": dishButterChicken,
   hilsa: dishButterChicken,
   momo: dishButterChicken,
-  ema datshi: dishButterChicken,
+  "ema datshi": dishButterChicken,
   kottu: dishButterChicken,
 
   // French / Pastry
