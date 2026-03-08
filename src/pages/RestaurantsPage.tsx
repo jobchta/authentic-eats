@@ -211,8 +211,8 @@ const RestaurantsPage = () => {
                 {filtered.map((restaurant, index) => {
                   const isLegendary = restaurant.tier === "Legendary";
                   return (
+                    <Link key={restaurant.id} to={`/restaurants/${restaurant.id}`}>
                     <motion.article
-                      key={restaurant.id}
                       layout
                       initial={{ opacity: 0, y: 15 }}
                       animate={{ opacity: 1, y: 0 }}
