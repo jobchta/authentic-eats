@@ -171,11 +171,22 @@ const DishCard = ({ dish }: { dish: DishData }) => {
         </div>
         <p className="font-body text-xs text-muted-foreground mt-0.5">{dish.cuisine_type}</p>
       </div>
-      <div className="flex items-center gap-1 shrink-0">
-        <Star className="h-3 w-3 fill-accent text-accent" />
-        <span className="font-body text-xs font-semibold text-foreground">
-          {dish.rating?.toFixed(1) || "—"}
-        </span>
+      <div className="flex items-center gap-2 shrink-0">
+        <button
+          onClick={() => {
+            if (!user) { navigate("/auth"); return; }
+            toggleFavorite.mutate({ dishId: dish.id, isFavorited });
+          }}
+          className={`transition-colors ${isFavorited ? "text-destructive" : "text-muted-foreground/40 hover:text-destructive"}`}
+        >
+          <Heart className={`h-3.5 w-3.5 ${isFavorited ? "fill-current" : ""}`} />
+        </button>
+        <div className="flex items-center gap-1">
+          <Star className="h-3 w-3 fill-accent text-accent" />
+          <span className="font-body text-xs font-semibold text-foreground">
+            {dish.rating?.toFixed(1) || "—"}
+          </span>
+        </div>
       </div>
     </div>
 
@@ -203,6 +214,7 @@ const DishCard = ({ dish }: { dish: DishData }) => {
       )}
     </div>
   </div>
-);
+  );
+};
 
 export default CountryDetailPanel;
