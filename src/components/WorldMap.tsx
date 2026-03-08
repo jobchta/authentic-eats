@@ -7,10 +7,8 @@ import {
 } from "react-simple-maps";
 import type { CountryData } from "@/pages/MapPage";
 
-// Natural Earth TopoJSON hosted on unpkg
 const GEO_URL = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json";
 
-// ISO numeric → alpha-2 mapping (covers major countries)
 const numericToAlpha2: Record<string, string> = {
   "004":"AF","008":"AL","012":"DZ","020":"AD","024":"AO","028":"AG","032":"AR","036":"AU","040":"AT","031":"AZ",
   "044":"BS","048":"BH","050":"BD","051":"AM","052":"BB","056":"BE","064":"BT","068":"BO","070":"BA","072":"BW",
@@ -44,54 +42,67 @@ const WorldMap = memo(({ countryByCode, selectedCode, onSelectCountry }: WorldMa
   const hoveredCountry = hoveredCode ? countryByCode.get(hoveredCode) : null;
 
   const getContinentColor = (code: string, isHovered: boolean, isSelected: boolean) => {
-    if (isSelected) return "hsl(350, 45%, 30%)"; // primary/burgundy
+    if (isSelected) return "hsl(350, 45%, 35%)";
     const country = countryByCode.get(code);
-    if (!country) return isHovered ? "hsl(30, 15%, 82%)" : "hsl(30, 15%, 88%)"; // muted for unknown
+    if (!country) return isHovered ? "hsl(30, 15%, 82%)" : "hsl(30, 15%, 88%)";
 
     const base: Record<string, [string, string]> = {
-      Asia: ["hsl(38, 70%, 50%)", "hsl(38, 70%, 42%)"],        // accent gold
-      Europe: ["hsl(350, 35%, 45%)", "hsl(350, 35%, 38%)"],    // burgundy-light
-      Africa: ["hsl(25, 55%, 50%)", "hsl(25, 55%, 42%)"],      // warm orange
-      "North America": ["hsl(200, 45%, 50%)", "hsl(200, 45%, 42%)"],
-      "South America": ["hsl(160, 40%, 45%)", "hsl(160, 40%, 38%)"],
-      Oceania: ["hsl(280, 35%, 50%)", "hsl(280, 35%, 42%)"],
+      Asia: ["hsl(38, 65%, 52%)", "hsl(38, 75%, 45%)"],
+      Europe: ["hsl(350, 35%, 42%)", "hsl(350, 45%, 35%)"],
+      Africa: ["hsl(25, 55%, 48%)", "hsl(25, 60%, 40%)"],
+      "North America": ["hsl(210, 45%, 48%)", "hsl(210, 50%, 40%)"],
+      "South America": ["hsl(160, 40%, 42%)", "hsl(160, 45%, 35%)"],
+      Oceania: ["hsl(280, 35%, 48%)", "hsl(280, 40%, 40%)"],
     };
     const colors = base[country.continent] || ["hsl(30, 20%, 70%)", "hsl(30, 20%, 62%)"];
     return isHovered ? colors[1] : colors[0];
   };
 
   return (
-    <div className="relative bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
-      {/* Tooltip */}
+    <div className="relative rounded-3xl overflow-hidden shadow-xl border border-border/50">
+      {/* Background with subtle gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-card via-card to-secondary" />
+
+      {/* Decorative glow for selected region */}
+      {selectedCode && (
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-accent/10 rounded-full blur-[100px]" />
+        </div>
+      )}
+
+      {/* Tooltip with glass effect */}
       {hoveredCountry && (
-        <div className="absolute top-4 left-4 z-10 bg-background/95 backdrop-blur-sm border border-border rounded-xl px-4 py-3 shadow-lg pointer-events-none">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">{hoveredCountry.flag_emoji}</span>
+        <div className="absolute top-5 left-5 z-10 glass rounded-2xl px-5 py-4 shadow-xl pointer-events-none animate-scale-in">
+          <div className="flex items-center gap-3">
+            <span className="text-3xl drop-shadow-md">{hoveredCountry.flag_emoji}</span>
             <div>
-              <p className="font-display text-sm font-bold text-foreground">{hoveredCountry.name}</p>
+              <p className="font-display text-base font-bold text-foreground">{hoveredCountry.name}</p>
               <p className="font-body text-xs text-muted-foreground">{hoveredCountry.continent} · {hoveredCountry.region}</p>
             </div>
           </div>
           {hoveredCountry.signature_ingredient && (
-            <p className="font-body text-xs text-accent mt-1">🌿 {hoveredCountry.signature_ingredient}</p>
+            <p className="font-body text-xs text-accent mt-2 font-medium">🌿 {hoveredCountry.signature_ingredient}</p>
+          )}
+          {hoveredCountry.food_description && (
+            <p className="font-body text-[11px] text-muted-foreground mt-1 max-w-[250px]">{hoveredCountry.food_description}</p>
           )}
         </div>
       )}
 
-      {/* Legend */}
-      <div className="absolute bottom-4 right-4 z-10 bg-background/90 backdrop-blur-sm border border-border rounded-lg px-3 py-2">
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1">
+      {/* Legend with glass */}
+      <div className="absolute bottom-5 right-5 z-10 glass rounded-xl px-4 py-3">
+        <div className="grid grid-cols-2 gap-x-5 gap-y-1.5">
           {[
-            ["Asia", "hsl(38, 70%, 50%)"],
-            ["Europe", "hsl(350, 35%, 45%)"],
-            ["Africa", "hsl(25, 55%, 50%)"],
-            ["N. America", "hsl(200, 45%, 50%)"],
-            ["S. America", "hsl(160, 40%, 45%)"],
-            ["Oceania", "hsl(280, 35%, 50%)"],
+            ["Asia", "hsl(38, 65%, 52%)"],
+            ["Europe", "hsl(350, 35%, 42%)"],
+            ["Africa", "hsl(25, 55%, 48%)"],
+            ["N. America", "hsl(210, 45%, 48%)"],
+            ["S. America", "hsl(160, 40%, 42%)"],
+            ["Oceania", "hsl(280, 35%, 48%)"],
           ].map(([label, color]) => (
-            <div key={label} className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: color }} />
-              <span className="font-body text-[10px] text-muted-foreground">{label}</span>
+            <div key={label} className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full shadow-sm" style={{ backgroundColor: color }} />
+              <span className="font-body text-[10px] text-muted-foreground font-medium">{label}</span>
             </div>
           ))}
         </div>
@@ -99,7 +110,7 @@ const WorldMap = memo(({ countryByCode, selectedCode, onSelectCountry }: WorldMa
 
       <ComposableMap
         projectionConfig={{ scale: 150, center: [10, 10] }}
-        className="w-full h-auto"
+        className="w-full h-auto relative z-0"
         style={{ aspectRatio: "2/1" }}
       >
         <ZoomableGroup>
@@ -123,24 +134,27 @@ const WorldMap = memo(({ countryByCode, selectedCode, onSelectCountry }: WorldMa
                       default: {
                         fill: getContinentColor(alpha2, false, isSelected),
                         stroke: "hsl(30, 25%, 97%)",
-                        strokeWidth: 0.5,
+                        strokeWidth: 0.4,
                         outline: "none",
                         cursor: inDb ? "pointer" : "default",
-                        opacity: inDb ? 1 : 0.4,
+                        opacity: inDb ? 1 : 0.3,
+                        transition: "all 0.3s ease",
                       },
                       hover: {
                         fill: getContinentColor(alpha2, true, isSelected),
-                        stroke: "hsl(30, 25%, 97%)",
-                        strokeWidth: 0.8,
+                        stroke: "hsl(38, 70%, 50%)",
+                        strokeWidth: inDb ? 1.5 : 0.4,
                         outline: "none",
                         cursor: inDb ? "pointer" : "default",
-                        opacity: inDb ? 1 : 0.4,
+                        opacity: inDb ? 1 : 0.3,
+                        filter: inDb ? "brightness(1.1) drop-shadow(0 0 8px hsla(38, 70%, 50%, 0.3))" : "none",
                       },
                       pressed: {
-                        fill: "hsl(350, 45%, 30%)",
-                        stroke: "hsl(30, 25%, 97%)",
-                        strokeWidth: 0.8,
+                        fill: "hsl(350, 45%, 35%)",
+                        stroke: "hsl(38, 70%, 50%)",
+                        strokeWidth: 1.5,
                         outline: "none",
+                        filter: "drop-shadow(0 0 12px hsla(350, 45%, 30%, 0.4))",
                       },
                     }}
                   />
