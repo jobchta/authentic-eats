@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
-import { X, Flame, Star, Leaf, Tag } from "lucide-react";
+import { X, Flame, Star, Leaf, Heart, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
+import { useExploredCountries, useFavoriteDishes, useToggleExplored, useToggleFavorite } from "@/hooks/use-passport";
+import { useNavigate } from "react-router-dom";
 import type { CountryData, DishData } from "@/pages/MapPage";
 
 interface CountryDetailPanelProps {
@@ -24,6 +27,12 @@ const SpiceIndicator = ({ level }: { level: number }) => (
 );
 
 const CountryDetailPanel = ({ country, dishes, dishesLoading, onClose }: CountryDetailPanelProps) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { data: explored } = useExploredCountries();
+  const toggleExplored = useToggleExplored();
+  const isExplored = explored?.some((e: any) => e.country_id === country.id) ?? false;
+
   const signatureDishes = dishes.filter((d) => d.is_signature);
   const otherDishes = dishes.filter((d) => !d.is_signature);
 
@@ -62,6 +71,20 @@ const CountryDetailPanel = ({ country, dishes, dishesLoading, onClose }: Country
             </span>
           </div>
         )}
+        <div className="mt-4">
+          <Button
+            variant={isExplored ? "outline" : "default"}
+            size="sm"
+            className="w-full font-body text-xs"
+            onClick={() => {
+              if (!user) { navigate("/auth"); return; }
+              toggleExplored.mutate({ countryId: country.id, isExplored });
+            }}
+          >
+            <Globe className="h-3.5 w-3.5 mr-1.5" />
+            {isExplored ? "Explored ✓" : "Mark as Explored"}
+          </Button>
+        </div>
       </div>
 
       {/* Food culture */}
@@ -125,7 +148,14 @@ const CountryDetailPanel = ({ country, dishes, dishesLoading, onClose }: Country
   );
 };
 
-const DishCard = ({ dish }: { dish: DishData }) => (
+const DishCard = ({ dish }: { dish: DishData }) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { data: favorites } = useFavoriteDishes();
+  const toggleFavorite = useToggleFavorite();
+  const isFavorited = favorites?.some((f: any) => f.dish_id === dish.id) ?? false;
+
+  return (
   <div className="p-4 bg-background rounded-xl border border-border hover:border-accent/30 transition-all">
     <div className="flex items-start justify-between gap-2">
       <div className="flex-1 min-w-0">
@@ -141,11 +171,22 @@ const DishCard = ({ dish }: { dish: DishData }) => (
         </div>
         <p className="font-body text-xs text-muted-foreground mt-0.5">{dish.cuisine_type}</p>
       </div>
-      <div className="flex items-center gap-1 shrink-0">
-        <Star className="h-3 w-3 fill-accent text-accent" />
-        <span className="font-body text-xs font-semibold text-foreground">
-          {dish.rating?.toFixed(1) || "—"}
-        </span>
+      <div className="flex items-center gap-2 shrink-0">
+        <button
+          onClick={() => {
+            if (!user) { navigate("/auth"); return; }
+            toggleFavorite.mutate({ dishId: dish.id, isFavorited });
+          }}
+          className={`transition-colors ${isFavorited ? "text-destructive" : "text-muted-foreground/40 hover:text-destructive"}`}
+        >
+          <Heart className={`h-3.5 w-3.5 ${isFavorited ? "fill-current" : ""}`} />
+        </button>
+        <div className="flex items-center gap-1">
+          <Star className="h-3 w-3 fill-accent text-accent" />
+          <span className="font-body text-xs font-semibold text-foreground">
+            {dish.rating?.toFixed(1) || "—"}
+          </span>
+        </div>
       </div>
     </div>
 
@@ -173,6 +214,7 @@ const DishCard = ({ dish }: { dish: DishData }) => (
       )}
     </div>
   </div>
-);
+  );
+};
 
 export default CountryDetailPanel;
