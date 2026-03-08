@@ -68,6 +68,11 @@ const FeaturedDishes = () => {
                   <span className="bg-primary/90 backdrop-blur-sm text-primary-foreground text-[10px] font-body font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
                     {dish.cuisine}
                   </span>
+                  {dish.promoted && (
+                    <span className="bg-accent/90 backdrop-blur-sm text-accent-foreground text-[10px] font-body font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+                      Promoted
+                    </span>
+                  )}
                 </div>
                 <div className="absolute top-3 right-3">
                   <span className="bg-background/80 backdrop-blur-sm text-foreground text-[10px] font-body font-semibold px-2 py-1 rounded-full">

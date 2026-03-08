@@ -14,11 +14,12 @@ const stories = [
   },
   {
     image: dishPaella,
-    category: "Origin Story",
+    category: "Sponsored",
     title: "Why Authentic Paella Has No Chorizo",
     excerpt: "The great Spanish debate: what belongs in a real paella? Valencia's oldest cooks set the record straight.",
     author: "Carlos Martínez",
     readTime: "5 min read",
+    sponsored: true,
   },
   {
     image: dishTagine,
@@ -100,9 +101,16 @@ const EditorialStories = () => {
                 />
               </div>
               <div className="p-5">
-                <span className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-accent">
-                  {story.category}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-body text-[10px] font-bold uppercase tracking-[0.2em] text-accent">
+                    {story.category}
+                  </span>
+                  {"sponsored" in story && story.sponsored && (
+                    <span className="font-body text-[9px] font-bold uppercase tracking-wider text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                      Sponsored
+                    </span>
+                  )}
+                </div>
                 <h3 className="font-display text-lg font-semibold text-card-foreground mt-2 mb-2 leading-tight">
                   {story.title}
                 </h3>
