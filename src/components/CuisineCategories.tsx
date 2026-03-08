@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCuisineCategories, useRegionStats } from "@/hooks/use-homepage-data";
 import { ChevronRight, Sparkles } from "lucide-react";
@@ -13,6 +13,27 @@ const regionGradients: Record<string, string> = {
   Oceania: "from-blue-500/10 to-indigo-500/5",
 };
 
+// forwardRef wrapper for AnimatePresence compatibility
+const CuisineOrb = forwardRef<HTMLButtonElement, any>(({ cuisine, index, ...motionProps }, ref) => (
+  <motion.button
+    ref={ref}
+    {...motionProps}
+    className="group flex flex-col items-center justify-center p-4 aspect-square rounded-full bg-card border-2 border-border hover:border-accent/50 transition-all cursor-pointer relative overflow-hidden orb-glow hover:shadow-2xl"
+  >
+    <div className="absolute inset-0 rounded-full bg-gradient-to-br from-accent/0 to-accent/0 group-hover:from-accent/10 group-hover:to-transparent transition-all duration-500" />
+    <span className="text-3xl sm:text-4xl group-hover:scale-125 transition-transform duration-300 relative z-10 drop-shadow-sm">
+      {cuisine.emoji}
+    </span>
+    <div className="text-center relative z-10 mt-1">
+      <p className="font-display text-[10px] sm:text-xs font-bold text-foreground">{cuisine.name}</p>
+      <p className="font-body text-[9px] text-muted-foreground font-medium">
+        {cuisine.count} dishes
+      </p>
+    </div>
+  </motion.button>
+));
+CuisineOrb.displayName = "CuisineOrb";
+
 const CuisineCategories = () => {
   const [activeRegion, setActiveRegion] = useState<string | null>(null);
   const { data: cuisines, isLoading: loadingCuisines } = useCuisineCategories();
@@ -26,11 +47,9 @@ const CuisineCategories = () => {
 
   return (
     <section id="cuisines" className="py-24 relative overflow-hidden transition-all duration-700">
-      {/* Dynamic background gradient */}
       <div className={`absolute inset-0 bg-gradient-to-br ${bgGradient || "from-transparent to-transparent"} transition-all duration-700`} />
       <div className="absolute inset-0 bg-background/95" />
 
-      {/* Decorative orbs */}
       <div className="absolute -top-32 -right-32 w-64 h-64 rounded-full bg-accent/5 blur-3xl" />
       <div className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-primary/5 blur-3xl" />
 
@@ -50,7 +69,6 @@ const CuisineCategories = () => {
           </h2>
         </motion.div>
 
-        {/* Region pills – horizontal scroller */}
         <div className="flex gap-3 mb-14 overflow-x-auto pb-2 scrollbar-hide justify-center flex-wrap">
           {loadingRegions
             ? Array.from({ length: 6 }).map((_, i) => (
@@ -88,7 +106,6 @@ const CuisineCategories = () => {
               ))}
         </div>
 
-        {/* Cuisine orbs grid */}
         {loadingCuisines ? (
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
             {Array.from({ length: 16 }).map((_, i) => (
@@ -99,8 +116,10 @@ const CuisineCategories = () => {
           <motion.div layout className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
             <AnimatePresence mode="popLayout">
               {filtered.map((cuisine, i) => (
-                <motion.button
+                <CuisineOrb
                   key={cuisine.name}
+                  cuisine={cuisine}
+                  index={i}
                   layout
                   initial={{ opacity: 0, scale: 0.7 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -108,25 +127,7 @@ const CuisineCategories = () => {
                   transition={{ delay: i * 0.02, type: "spring", stiffness: 400, damping: 25 }}
                   whileHover={{ scale: 1.15, y: -8 }}
                   whileTap={{ scale: 0.9 }}
-                  className="group flex flex-col items-center justify-center p-4 aspect-square rounded-full bg-card border-2 border-border hover:border-accent/50 transition-all cursor-pointer relative overflow-hidden orb-glow hover:shadow-2xl"
-                >
-                  {/* Inner glow on hover */}
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-accent/0 to-accent/0 group-hover:from-accent/10 group-hover:to-transparent transition-all duration-500" />
-
-                  <span className="text-3xl sm:text-4xl group-hover:scale-125 transition-transform duration-300 relative z-10 drop-shadow-sm">
-                    {cuisine.emoji}
-                  </span>
-                  <div className="text-center relative z-10 mt-1">
-                    <p className="font-display text-[10px] sm:text-xs font-bold text-foreground">{cuisine.name}</p>
-                    <motion.p
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      className="font-body text-[9px] text-muted-foreground font-medium"
-                    >
-                      {cuisine.count} dishes
-                    </motion.p>
-                  </div>
-                </motion.button>
+                />
               ))}
             </AnimatePresence>
           </motion.div>

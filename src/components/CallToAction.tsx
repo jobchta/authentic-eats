@@ -48,7 +48,7 @@ const CallToAction = () => {
                 Create Free Account
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
-              <Button size="lg" variant="outline" className="font-body border-background/20 text-background hover:bg-background/10">
+              <Button size="lg" variant="outline" className="font-body border-background/40 text-background hover:bg-background/15 bg-background/5">
                 Learn How It Works
               </Button>
             </div>

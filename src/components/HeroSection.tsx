@@ -155,7 +155,7 @@ const HeroSection = () => {
             The World's Authentic Food Guide
           </motion.p>
 
-          <div className="h-[160px] md:h-[220px] relative overflow-hidden mb-8">
+          <div className="min-h-[140px] md:min-h-[200px] relative mb-8">
             <AnimatePresence mode="wait">
               <motion.h1
                 key={current}
