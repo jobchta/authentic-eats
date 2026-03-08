@@ -28,6 +28,7 @@ export type Dish = {
   region: string;
   tags: string[];
   trending?: boolean;
+  promoted?: boolean;
 };
 
 export type Restaurant = {
