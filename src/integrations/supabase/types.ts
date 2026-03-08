@@ -106,6 +106,94 @@ export type Database = {
           },
         ]
       }
+      explored_countries: {
+        Row: {
+          country_id: string
+          explored_at: string
+          id: string
+          notes: string | null
+          user_id: string
+        }
+        Insert: {
+          country_id: string
+          explored_at?: string
+          id?: string
+          notes?: string | null
+          user_id: string
+        }
+        Update: {
+          country_id?: string
+          explored_at?: string
+          id?: string
+          notes?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "explored_countries_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      favorite_dishes: {
+        Row: {
+          dish_id: string
+          favorited_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          dish_id: string
+          favorited_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          dish_id?: string
+          favorited_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favorite_dishes_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: false
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
