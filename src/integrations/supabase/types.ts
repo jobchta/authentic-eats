@@ -14,7 +14,98 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      countries: {
+        Row: {
+          code: string
+          continent: string
+          created_at: string | null
+          flag_emoji: string
+          food_culture_summary: string | null
+          food_description: string | null
+          id: string
+          name: string
+          region: string
+          signature_ingredient: string | null
+        }
+        Insert: {
+          code: string
+          continent: string
+          created_at?: string | null
+          flag_emoji?: string
+          food_culture_summary?: string | null
+          food_description?: string | null
+          id?: string
+          name: string
+          region: string
+          signature_ingredient?: string | null
+        }
+        Update: {
+          code?: string
+          continent?: string
+          created_at?: string | null
+          flag_emoji?: string
+          food_culture_summary?: string | null
+          food_description?: string | null
+          id?: string
+          name?: string
+          region?: string
+          signature_ingredient?: string | null
+        }
+        Relationships: []
+      }
+      dishes: {
+        Row: {
+          country_id: string
+          created_at: string | null
+          cuisine_type: string
+          description: string | null
+          dietary_tags: string[] | null
+          id: string
+          is_signature: boolean | null
+          name: string
+          rating: number | null
+          reviews_count: number | null
+          spice_level: number | null
+          tags: string[] | null
+        }
+        Insert: {
+          country_id: string
+          created_at?: string | null
+          cuisine_type: string
+          description?: string | null
+          dietary_tags?: string[] | null
+          id?: string
+          is_signature?: boolean | null
+          name: string
+          rating?: number | null
+          reviews_count?: number | null
+          spice_level?: number | null
+          tags?: string[] | null
+        }
+        Update: {
+          country_id?: string
+          created_at?: string | null
+          cuisine_type?: string
+          description?: string | null
+          dietary_tags?: string[] | null
+          id?: string
+          is_signature?: boolean | null
+          name?: string
+          rating?: number | null
+          reviews_count?: number | null
+          spice_level?: number | null
+          tags?: string[] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dishes_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
