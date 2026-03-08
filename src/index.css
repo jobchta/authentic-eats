@@ -97,15 +97,20 @@
 @layer components {
   .text-gradient-gold {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--gold)), hsl(38 80% 60%));
+    background-image: linear-gradient(135deg, hsl(38 70% 50%), hsl(38 80% 65%), hsl(30 60% 55%));
+  }
+
+  .text-gradient-burgundy {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(350 45% 30%), hsl(350 55% 45%));
   }
 
   .hero-overlay {
     background: linear-gradient(
       to bottom,
-      hsla(20, 15%, 8%, 0.3) 0%,
-      hsla(20, 15%, 8%, 0.6) 50%,
-      hsla(20, 15%, 8%, 0.85) 100%
+      hsla(20, 15%, 8%, 0.2) 0%,
+      hsla(20, 15%, 8%, 0.5) 40%,
+      hsla(20, 15%, 8%, 0.88) 100%
     );
   }
 
@@ -113,7 +118,151 @@
     @apply transition-all duration-500 ease-out;
   }
   .card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 40px -12px hsla(20, 15%, 12%, 0.15);
+    transform: translateY(-6px);
+    box-shadow:
+      0 25px 50px -12px hsla(20, 15%, 12%, 0.18),
+      0 0 0 1px hsla(38, 70%, 50%, 0.08);
   }
+
+  /* Glass morphism */
+  .glass {
+    background: hsla(30, 25%, 97%, 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid hsla(30, 15%, 88%, 0.6);
+  }
+  .glass-dark {
+    background: hsla(20, 15%, 8%, 0.6);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid hsla(30, 15%, 88%, 0.1);
+  }
+
+  /* Glow effects */
+  .glow-gold {
+    box-shadow:
+      0 0 20px hsla(38, 70%, 50%, 0.15),
+      0 0 60px hsla(38, 70%, 50%, 0.08);
+  }
+  .glow-burgundy {
+    box-shadow:
+      0 0 20px hsla(350, 45%, 30%, 0.2),
+      0 0 60px hsla(350, 45%, 30%, 0.1);
+  }
+  .glow-accent-hover:hover {
+    box-shadow:
+      0 0 30px hsla(38, 70%, 50%, 0.2),
+      0 0 80px hsla(38, 70%, 50%, 0.1);
+  }
+
+  /* Gradient overlays for cards */
+  .gradient-food-warm {
+    background: linear-gradient(135deg, hsl(25 50% 20%), hsl(350 45% 25%), hsl(38 70% 35%));
+  }
+  .gradient-food-cool {
+    background: linear-gradient(135deg, hsl(200 45% 20%), hsl(220 40% 25%), hsl(280 35% 30%));
+  }
+  .gradient-food-earth {
+    background: linear-gradient(135deg, hsl(30 40% 22%), hsl(20 35% 18%), hsl(350 30% 22%));
+  }
+
+  /* Shimmer animation for loading and premium effects */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      110deg,
+      transparent 25%,
+      hsla(38, 70%, 50%, 0.08) 37%,
+      transparent 63%
+    );
+    animation: shimmer 3s ease-in-out infinite;
+  }
+
+  /* Floating animation */
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  /* Noise texture overlay */
+  .noise::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Stamp effect for passport */
+  .stamp {
+    border: 3px solid hsl(var(--primary));
+    border-radius: 50%;
+    padding: 0.75rem;
+    position: relative;
+  }
+  .stamp::after {
+    content: '✓';
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 18px;
+    height: 18px;
+    background: hsl(var(--accent));
+    color: hsl(var(--accent-foreground));
+    border-radius: 50%;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+  }
+
+  /* Scrollbar hide */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Parallax text shadow */
+  .text-shadow-hero {
+    text-shadow: 0 4px 30px hsla(20, 15%, 8%, 0.5);
+  }
+
+  /* Grain overlay for sections */
+  .section-grain {
+    position: relative;
+  }
+  .section-grain::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.015;
+    background: repeating-conic-gradient(hsl(var(--foreground)) 0%, transparent 0.5%, transparent 1%);
+    pointer-events: none;
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px hsla(38, 70%, 50%, 0.15); }
+  50% { box-shadow: 0 0 40px hsla(38, 70%, 50%, 0.3); }
 }
