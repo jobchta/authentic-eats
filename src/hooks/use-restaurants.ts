@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export interface DbRestaurant {
@@ -26,6 +26,62 @@ export interface DbRestaurant {
     code: string;
     region: string;
   };
+}
+
+const PAGE_SIZE = 24;
+
+export function useRestaurantsPaginated(filters?: {
+  tier?: string;
+  continent?: string;
+  price?: string;
+  search?: string;
+}) {
+  return useInfiniteQuery({
+    queryKey: ["restaurants-paginated", filters],
+    queryFn: async ({ pageParam = 0 }) => {
+      let query = supabase
+        .from("restaurants")
+        .select("*, country:countries(*)")
+        .order("rating", { ascending: false })
+        .range(pageParam, pageParam + PAGE_SIZE - 1);
+
+      if (filters?.tier && filters.tier !== "All") {
+        query = query.eq("tier", filters.tier);
+      }
+      if (filters?.price && filters.price !== "All") {
+        query = query.eq("price_range", filters.price);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      let results = data as unknown as DbRestaurant[];
+
+      // Client-side filters for joined fields
+      if (filters?.continent && filters.continent !== "All") {
+        results = results.filter((r) => r.country?.continent === filters.continent);
+      }
+      if (filters?.search) {
+        const q = filters.search.toLowerCase();
+        results = results.filter(
+          (r) =>
+            r.name.toLowerCase().includes(q) ||
+            r.cuisine_type.toLowerCase().includes(q) ||
+            r.city.toLowerCase().includes(q) ||
+            r.country?.name?.toLowerCase().includes(q) ||
+            r.speciality?.toLowerCase().includes(q)
+        );
+      }
+
+      return {
+        items: results,
+        nextOffset: data.length === PAGE_SIZE ? pageParam + PAGE_SIZE : undefined,
+      };
+    },
+    getNextPageParam: (lastPage) => lastPage.nextOffset,
+    initialPageParam: 0,
+    staleTime: 5 * 60 * 1000,
+  });
 }
 
 export function useRestaurants(options?: { tier?: string; limit?: number }) {

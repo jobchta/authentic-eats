@@ -1,1 +1,4 @@
 project_id = "ywznviihumlfbqkildfh"
+
+[functions.osm-restaurants]
+verify_jwt = false
