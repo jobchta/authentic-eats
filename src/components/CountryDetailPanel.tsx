@@ -27,6 +27,12 @@ const SpiceIndicator = ({ level }: { level: number }) => (
 );
 
 const CountryDetailPanel = ({ country, dishes, dishesLoading, onClose }: CountryDetailPanelProps) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { data: explored } = useExploredCountries();
+  const toggleExplored = useToggleExplored();
+  const isExplored = explored?.some((e: any) => e.country_id === country.id) ?? false;
+
   const signatureDishes = dishes.filter((d) => d.is_signature);
   const otherDishes = dishes.filter((d) => !d.is_signature);
 
