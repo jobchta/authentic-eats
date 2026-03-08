@@ -263,7 +263,7 @@ const nameMap: Record<string, string> = {
   "b'stilla": dishTagine,
   merguez: dishTagine,
   mechoui: dishTagine,
-  shakshuka: dishTagine,
+  // shakshuka already mapped above
   msemen: dishTagine,
 
   // Vietnamese
