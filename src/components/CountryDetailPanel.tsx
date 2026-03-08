@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
-import { X, Flame, Star, Leaf, Tag } from "lucide-react";
+import { X, Flame, Star, Leaf, Heart, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/use-auth";
+import { useExploredCountries, useFavoriteDishes, useToggleExplored, useToggleFavorite } from "@/hooks/use-passport";
+import { useNavigate } from "react-router-dom";
 import type { CountryData, DishData } from "@/pages/MapPage";
 
 interface CountryDetailPanelProps {
