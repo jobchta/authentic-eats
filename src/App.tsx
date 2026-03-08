@@ -13,6 +13,7 @@ import MapPage from "./pages/MapPage";
 import AuthPage from "./pages/AuthPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import PassportPage from "./pages/PassportPage";
+import RestaurantsPage from "./pages/RestaurantsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
