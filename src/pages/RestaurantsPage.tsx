@@ -284,6 +284,7 @@ const RestaurantsPage = () => {
                       </div>
                     </motion.article>
                     </Link>
+                  );
                 })}
               </AnimatePresence>
             </div>
