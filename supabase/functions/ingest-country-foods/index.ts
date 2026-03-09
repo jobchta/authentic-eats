@@ -16,40 +16,39 @@ Deno.serve(async (req) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
 
-  // Auth check - require admin role
+  // Auth: allow internal calls with service role key header, or authenticated admin users
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
-    global: { headers: { Authorization: authHeader } },
-  });
-
-  const token = authHeader.replace("Bearer ", "");
-  const { data: claims, error: claimsErr } = await userSupabase.auth.getClaims(token);
-  if (claimsErr || !claims?.claims?.sub) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
-  const userId = claims.claims.sub;
-
-  // Check admin role using service role client
+  const internalKey = req.headers.get("X-Internal-Key");
   const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
-  const { data: roleData, error: roleErr } = await adminSupabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle();
 
-  if (roleErr || !roleData) {
-    return new Response(JSON.stringify({ error: "Admin access required" }), {
-      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+  if (internalKey === serviceRoleKey) {
+    // Internal/seeding call — trusted
+  } else if (authHeader?.startsWith("Bearer ")) {
+    const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claims, error: claimsErr } = await userSupabase.auth.getClaims(token);
+    if (claimsErr || !claims?.claims?.sub) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = claims.claims.sub;
+    const { data: roleData, error: roleErr } = await adminSupabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (roleErr || !roleData) {
+      return new Response(JSON.stringify({ error: "Admin access required" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+  } else {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 

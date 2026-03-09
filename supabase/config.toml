@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.ingest-country-foods]
 verify_jwt = false
+
+[functions.bulk-seed]
+verify_jwt = false
