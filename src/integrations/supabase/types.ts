@@ -170,6 +170,91 @@ export type Database = {
           },
         ]
       }
+      ingestion_jobs: {
+        Row: {
+          completed_at: string | null
+          country_id: string | null
+          deep_research: boolean | null
+          dishes_added: number | null
+          error_message: string | null
+          id: string
+          ingredients_added: number | null
+          recipes_added: number | null
+          started_at: string | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          country_id?: string | null
+          deep_research?: boolean | null
+          dishes_added?: number | null
+          error_message?: string | null
+          id?: string
+          ingredients_added?: number | null
+          recipes_added?: number | null
+          started_at?: string | null
+          status: string
+        }
+        Update: {
+          completed_at?: string | null
+          country_id?: string | null
+          deep_research?: boolean | null
+          dishes_added?: number | null
+          error_message?: string | null
+          id?: string
+          ingredients_added?: number | null
+          recipes_added?: number | null
+          started_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingestion_jobs_country_id_fkey"
+            columns: ["country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ingredients: {
+        Row: {
+          aliases: string[] | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          origin_country_id: string | null
+        }
+        Insert: {
+          aliases?: string[] | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          origin_country_id?: string | null
+        }
+        Update: {
+          aliases?: string[] | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          origin_country_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingredients_origin_country_id_fkey"
+            columns: ["origin_country_id"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       newsletter_subscribers: {
         Row: {
           email: string
@@ -259,6 +344,86 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      recipe_ingredients: {
+        Row: {
+          id: string
+          ingredient_id: string
+          is_optional: boolean | null
+          quantity: string | null
+          recipe_id: string
+        }
+        Insert: {
+          id?: string
+          ingredient_id: string
+          is_optional?: boolean | null
+          quantity?: string | null
+          recipe_id: string
+        }
+        Update: {
+          id?: string
+          ingredient_id?: string
+          is_optional?: boolean | null
+          quantity?: string | null
+          recipe_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_ingredients_ingredient_id_fkey"
+            columns: ["ingredient_id"]
+            isOneToOne: false
+            referencedRelation: "ingredients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipe_ingredients_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recipes: {
+        Row: {
+          cook_time_minutes: number | null
+          created_at: string | null
+          difficulty: string | null
+          dish_id: string
+          id: string
+          instructions: Json | null
+          prep_time_minutes: number | null
+          servings: number | null
+        }
+        Insert: {
+          cook_time_minutes?: number | null
+          created_at?: string | null
+          difficulty?: string | null
+          dish_id: string
+          id?: string
+          instructions?: Json | null
+          prep_time_minutes?: number | null
+          servings?: number | null
+        }
+        Update: {
+          cook_time_minutes?: number | null
+          created_at?: string | null
+          difficulty?: string | null
+          dish_id?: string
+          id?: string
+          instructions?: Json | null
+          prep_time_minutes?: number | null
+          servings?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipes_dish_id_fkey"
+            columns: ["dish_id"]
+            isOneToOne: true
+            referencedRelation: "dishes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       restaurants: {
         Row: {
