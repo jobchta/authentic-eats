@@ -56,7 +56,7 @@ function mapPlace(feature: any, city: typeof CITIES[0]) {
   if (!coords) return null;
 
   return {
-    osm_id: props.place_id ? parseInt(props.place_id.split(':')[1] ?? '0') : Math.floor(Math.random() * 1000000000),
+    osm_id: Math.abs((coords[0] * 1000000 + coords[1] * 1000000 + (props.name?.length || 0)) | 0),
     name: props.name ?? 'Unnamed',
     cuisine: props.cuisine ?? null,
     city: props.city ?? city.name,
