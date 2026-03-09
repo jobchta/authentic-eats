@@ -147,12 +147,22 @@ const AdminIngestion = () => {
         </div>
 
         {/* Controls */}
-        <div className="flex items-center gap-4 mb-6 p-4 bg-card border border-border rounded-xl">
+        <div className="flex items-center gap-4 mb-6 p-4 bg-card border border-border rounded-xl flex-wrap">
           <label className="flex items-center gap-2 font-body text-sm text-foreground cursor-pointer">
             <Switch checked={deepResearch} onCheckedChange={setDeepResearch} />
             <Flame className={`h-4 w-4 ${deepResearch ? "text-destructive" : "text-muted-foreground"}`} />
             Deep Research (50 dishes per run)
           </label>
+          <Button
+            variant="default"
+            size="sm"
+            disabled={bulkRunning}
+            onClick={runBulkIngestion}
+            className="ml-auto font-body"
+          >
+            {bulkRunning ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Zap className="h-3 w-3 mr-2" />}
+            Bulk Ingest ({underCoveredCount} countries &lt;10 dishes)
+          </Button>
         </div>
 
         {/* Recent Jobs */}
