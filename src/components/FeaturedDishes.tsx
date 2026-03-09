@@ -218,8 +218,11 @@ const FeaturedDishes = () => {
           viewport={{ once: true }}
           className="text-center mt-14"
         >
-          <button className="font-body text-sm font-bold text-primary hover:text-primary/80 transition-colors group">
-            View all dishes
+          <button
+            onClick={() => navigate("/restaurants")}
+            className="font-body text-sm font-bold text-primary hover:text-primary/80 transition-colors group"
+          >
+            View all dishes & restaurants
             <span className="inline-block ml-1 transition-transform group-hover:translate-x-1">→</span>
           </button>
         </motion.div>
