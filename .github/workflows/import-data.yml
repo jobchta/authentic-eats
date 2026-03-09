@@ -128,8 +128,6 @@ jobs:
                   'country_id': country_id,
                   'cuisine_type': cuisine_type,
                   'tier': 'remarkable',
-                  'address': tags.get('addr:full') or tags.get('addr:street', ''),
-                  'website_url': tags.get('website') or tags.get('contact:website', ''),
                 }).execute()
                 inserted += 1
                 total_imported += 1
