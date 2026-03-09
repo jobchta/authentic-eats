@@ -273,7 +273,7 @@ async function generateRecommendations(answers: Record<string, string>): Promise
   if (answers.diet === "vegetarian") query = query.contains("dietary_tags", ["vegetarian"]);
 
   // Get top-rated
-  query = query.order("rating", { ascending: false }).limit(100);
+  query = query.order("rating", { ascending: false }).limit(500);
 
   const { data, error } = await query;
   if (error) throw error;
@@ -308,20 +308,20 @@ async function generateRecommendations(answers: Record<string, string>): Promise
   }
 
   // Shuffle and take top 5
-  const shuffled = results.sort(() => Math.random() - 0.5).slice(0, 5);
+  const shuffled = results.sort(() => Math.random() - 0.5).slice(0, 8);
 
   // If we don't have enough results, pad with random top dishes
-  if (shuffled.length < 3) {
+  if (shuffled.length < 5) {
     const { data: fallback } = await supabase
       .from("dishes")
       .select("*, country:countries(*)")
       .order("rating", { ascending: false })
-      .limit(5);
+      .limit(20);
     if (fallback) {
       const existingIds = new Set(shuffled.map((d) => d.id));
       for (const d of fallback) {
         if (!existingIds.has(d.id)) shuffled.push(d);
-        if (shuffled.length >= 5) break;
+        if (shuffled.length >= 8) break;
       }
     }
   }
