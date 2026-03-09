@@ -16,8 +16,7 @@ export function useHomepageDishes() {
       const { data, error } = await supabase
         .from("dishes")
         .select("*, country:countries(*)")
-        .order("rating", { ascending: false })
-        .limit(50);
+        .order("rating", { ascending: false });
       if (error) throw error;
       return data as unknown as DishWithCountry[];
     },
