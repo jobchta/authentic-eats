@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const allRegions = ["All", "Asia", "Europe", "Americas", "Africa", "Oceania"];
 
 // Wrap motion.article in forwardRef for AnimatePresence
-const DishCard = forwardRef<HTMLElement, any>(({ dish, img, isFavorited, isHero, index, user, navigate, toggleFavorite, ...motionProps }, ref) => {
+const DishCard = forwardRef<HTMLElement, any>(({ dish, img, isFavorited, isHero, index, user, navigate, toggleFavorite, onClick, ...motionProps }, ref) => {
   const gradient = continentGradients[dish.country?.continent] || "from-muted to-muted";
 
   return (
