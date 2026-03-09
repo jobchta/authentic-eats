@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://authentic-plate-finder.lovable.app/sitemap.xml
