@@ -132,3 +132,5 @@ VITE_SUPABASE_ANON_KEY=eyJ...
 - **CI/CD:** GitHub Actions + Vercel
 - **Testing:** Vitest
 - **Runtime:** Bun
+
+ 
