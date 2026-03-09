@@ -1,18 +1,26 @@
 #!/usr/bin/env bun
 /**
- * crawlTiles.ts - BULK MODE
- * Queries OSM Overpass API per country/region in one shot.
- * Gets 500k-2M records in a single 45-min GitHub Actions run.
- * No tile-by-tile crawling needed for initial seed.
+ * crawlTiles.ts - BBOX TILE MODE
+ * Splits countries into 2x2 degree bounding box tiles.
+ * Each tile query is small enough for Overpass to handle reliably.
+ * Reads CITY and MAX_TILES from env (set by workflow_dispatch inputs).
  */
-
 import { createClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const OVERPASS_URL = 'https://overpass-api.de/api/interpreter';
+const CITY_FILTER = process.env.CITY || '';
+const MAX_TILES = parseInt(process.env.MAX_TILES || '50', 10);
 const BATCH_INSERT = 500;
+const TILE_DEG = 2; // 2x2 degree tiles
+
+// Overpass mirrors to rotate through on error
+const OVERPASS_MIRRORS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://lz4.overpass-api.de/api/interpreter',
+  'https://z.overpass-api.de/api/interpreter',
+];
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
@@ -23,48 +31,94 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 });
 
-// BULK REGIONS - each query fetches ALL restaurants in that country/area
-// Overpass timeout=300 handles large countries fine
-const REGIONS = [
-  { name: 'India',     query: '["ISO3166-1"="IN"]' },
-  { name: 'Japan',     query: '["ISO3166-1"="JP"]' },
-  { name: 'Singapore', query: '["ISO3166-1"="SG"]' },
-  { name: 'UAE',       query: '["ISO3166-1"="AE"]' },
-  { name: 'UK',        query: '["ISO3166-1"="GB"]' },
-  { name: 'France',    query: '["ISO3166-1"="FR"]' },
-  { name: 'USA-NY',    query: '["name"="New York"]["admin_level"="4"]' },
-  { name: 'Australia', query: '["ISO3166-1"="AU"]' },
+// Country bounding boxes [minLat, minLon, maxLat, maxLon]
+const COUNTRIES: { name: string; bbox: [number, number, number, number] }[] = [
+  { name: 'India',     bbox: [6.5,  68.0,  37.5, 97.5] },
+  { name: 'Japan',     bbox: [24.0, 122.0, 46.0, 146.0] },
+  { name: 'Singapore', bbox: [1.15, 103.6, 1.47, 104.1] },
+  { name: 'UAE',       bbox: [22.5, 51.0,  26.1, 56.5] },
+  { name: 'UK',        bbox: [49.8, -8.2,  60.9, 2.0] },
+  { name: 'France',    bbox: [41.3, -5.2,  51.1, 9.7] },
+  { name: 'USA',       bbox: [24.5, -125.0, 49.5, -66.9] },
+  { name: 'Australia', bbox: [-43.6, 113.3, -10.7, 153.6] },
+  { name: 'Germany',   bbox: [47.3,  5.8,  55.1, 15.1] },
+  { name: 'Brazil',    bbox: [-33.8, -73.9, 5.3, -34.7] },
 ];
+
+interface Tile {
+  country: string;
+  minLat: number;
+  minLon: number;
+  maxLat: number;
+  maxLon: number;
+  key: string;
+}
+
+function generateTiles(filter: string): Tile[] {
+  const tiles: Tile[] = [];
+  const countries = filter
+    ? COUNTRIES.filter(c => c.name.toLowerCase().includes(filter.toLowerCase()))
+    : COUNTRIES;
+
+  for (const country of countries) {
+    const [minLat, minLon, maxLat, maxLon] = country.bbox;
+    for (let lat = minLat; lat < maxLat; lat += TILE_DEG) {
+      for (let lon = minLon; lon < maxLon; lon += TILE_DEG) {
+        const s = Math.max(lat, minLat);
+        const w = Math.max(lon, minLon);
+        const n = Math.min(lat + TILE_DEG, maxLat);
+        const e = Math.min(lon + TILE_DEG, maxLon);
+        tiles.push({
+          country: country.name,
+          minLat: s, minLon: w, maxLat: n, maxLon: e,
+          key: `${country.name}:${s.toFixed(1)},${w.toFixed(1)},${n.toFixed(1)},${e.toFixed(1)}`,
+        });
+      }
+    }
+  }
+  return tiles;
+}
 
 const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-async function fetchCountryRestaurants(region: typeof REGIONS[0]): Promise<any[]> {
-  const query = `[out:json][timeout:300];
-area${region.query}->.r;
+async function fetchTile(tile: Tile, mirrorIdx = 0): Promise<any[]> {
+  const { minLat, minLon, maxLat, maxLon } = tile;
+  const bbox = `${minLat},${minLon},${maxLat},${maxLon}`;
+  const query = `[out:json][timeout:60][bbox:${bbox}];
 (
-  node["amenity"="restaurant"](area.r);
-  way["amenity"="restaurant"](area.r);
+  node["amenity"="restaurant"];
+  way["amenity"="restaurant"];
+  node["amenity"="cafe"];
+  way["amenity"="cafe"];
+  node["amenity"="fast_food"];
+  way["amenity"="fast_food"];
 );
 out center tags;`;
 
-  console.log(`  Querying Overpass for ${region.name}...`);
-  const resp = await fetch(OVERPASS_URL, {
+  const mirror = OVERPASS_MIRRORS[mirrorIdx % OVERPASS_MIRRORS.length];
+  const resp = await fetch(mirror, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: `data=${encodeURIComponent(query)}`,
-    signal: AbortSignal.timeout(360_000),
+    signal: AbortSignal.timeout(90_000),
   });
 
   if (!resp.ok) {
     const text = await resp.text();
-    throw new Error(`Overpass HTTP ${resp.status}: ${text.slice(0, 200)}`);
+    // Try next mirror on 5xx
+    if (resp.status >= 500 && mirrorIdx < OVERPASS_MIRRORS.length - 1) {
+      console.log(`  [retry] Mirror ${mirror} failed (${resp.status}), trying next...`);
+      await sleep(3000);
+      return fetchTile(tile, mirrorIdx + 1);
+    }
+    throw new Error(`Overpass HTTP ${resp.status}: ${text.slice(0, 150)}`);
   }
 
   const data = await resp.json() as { elements: any[] };
   return data.elements ?? [];
 }
 
-function mapElement(el: any): any {
+function mapElement(el: any, country: string): any {
   const lat = el.lat ?? el.center?.lat;
   const lon = el.lon ?? el.center?.lon;
   if (!lat || !lon) return null;
@@ -74,6 +128,8 @@ function mapElement(el: any): any {
     name: tags.name ?? tags['name:en'] ?? 'Unnamed',
     lat,
     lon,
+    country,
+    amenity_type: tags.amenity ?? 'restaurant',
     address: [tags['addr:housenumber'], tags['addr:street'], tags['addr:city']]
       .filter(Boolean).join(', ') || null,
     cuisine: tags.cuisine ?? null,
@@ -93,57 +149,67 @@ async function upsertBatch(rows: any[]): Promise<number> {
       .upsert(batch, { onConflict: 'osm_id', count: 'exact' });
     if (error) throw new Error(`Supabase upsert error: ${error.message}`);
     total += count ?? batch.length;
-    // Small pause to not hammer Supabase rate limits
-    if (i % 5000 === 0 && i > 0) await sleep(500);
+    if (i % 5000 === 0 && i > 0) await sleep(300);
   }
   return total;
 }
 
 async function main() {
-  console.log('=== BULK OSM Restaurant Import ===');
-  console.log(`Target: ${REGIONS.map(r => r.name).join(', ')}`);
+  console.log('=== OSM Restaurant Tile Crawler ===');
+  console.log(`City filter: "${CITY_FILTER || 'all countries'}"`);
+  console.log(`Max tiles: ${MAX_TILES}`);
+  console.log('');
+
+  const allTiles = generateTiles(CITY_FILTER);
+  console.log(`Total tiles generated: ${allTiles.length}`);
+
+  const tiles = allTiles.slice(0, MAX_TILES);
+  console.log(`Processing ${tiles.length} tiles this run`);
   console.log('');
 
   const report: any[] = [];
   let grandTotal = 0;
+  let tileIdx = 0;
 
-  for (const region of REGIONS) {
+  for (const tile of tiles) {
+    tileIdx++;
     const start = Date.now();
-    console.log(`[${region.name}] Starting...`);
+    console.log(`[${tileIdx}/${tiles.length}] ${tile.key}`);
     try {
-      const elements = await fetchCountryRestaurants(region);
-      console.log(`[${region.name}] Got ${elements.length} elements from Overpass`);
-
-      const rows = elements.map(mapElement).filter(Boolean);
-      console.log(`[${region.name}] Mapped ${rows.length} valid restaurants`);
+      const elements = await fetchTile(tile);
+      const rows = elements.map(el => mapElement(el, tile.country)).filter(Boolean);
+      console.log(`  Got ${elements.length} elements -> ${rows.length} valid`);
 
       if (rows.length > 0) {
         const inserted = await upsertBatch(rows);
         grandTotal += inserted;
-        console.log(`[${region.name}] Upserted ${inserted} rows to Supabase`);
+        console.log(`  Upserted ${inserted} rows (running total: ${grandTotal})`);
       }
 
       const elapsed = Math.round((Date.now() - start) / 1000);
-      console.log(`[${region.name}] Done in ${elapsed}s`);
-      report.push({ region: region.name, count: rows.length, elapsed, status: 'ok' });
+      report.push({ tile: tile.key, count: rows.length, elapsed, status: 'ok' });
     } catch (err: any) {
-      console.error(`[${region.name}] ERROR: ${err.message}`);
-      report.push({ region: region.name, error: err.message, status: 'error' });
+      console.error(`  ERROR: ${err.message}`);
+      report.push({ tile: tile.key, error: err.message, status: 'error' });
     }
 
-    // 5s between country queries to respect Overpass fair-use
-    await sleep(5000);
+    // Respect Overpass fair-use: 1s between tiles
+    await sleep(1000);
   }
 
   console.log('');
   console.log(`=== DONE. Total restaurants upserted: ${grandTotal} ===`);
+  console.log(`Tiles processed: ${tileIdx} / Total available: ${allTiles.length}`);
 
   fs.writeFileSync('crawl-report.json', JSON.stringify({
     timestamp: new Date().toISOString(),
+    city_filter: CITY_FILTER,
+    max_tiles: MAX_TILES,
+    tiles_processed: tileIdx,
+    tiles_available: allTiles.length,
     total: grandTotal,
-    regions: report,
+    tiles: report,
   }, null, 2));
-
   console.log('Report written to crawl-report.json');
 }
 
