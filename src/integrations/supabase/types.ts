@@ -61,6 +61,7 @@ export type Database = {
           description: string | null
           dietary_tags: string[] | null
           id: string
+          image_url: string | null
           is_signature: boolean | null
           name: string
           rating: number | null
@@ -75,6 +76,7 @@ export type Database = {
           description?: string | null
           dietary_tags?: string[] | null
           id?: string
+          image_url?: string | null
           is_signature?: boolean | null
           name: string
           rating?: number | null
@@ -89,6 +91,7 @@ export type Database = {
           description?: string | null
           dietary_tags?: string[] | null
           id?: string
+          image_url?: string | null
           is_signature?: boolean | null
           name?: string
           rating?: number | null
