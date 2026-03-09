@@ -62,7 +62,7 @@ function mapPlace(feature: any, city: typeof CITIES[0]) {
     city: props.city ?? city.name,
     country: props.country_code?.toUpperCase() ?? city.country,
     lat: coords[1],
-    lng: coords[0],
+    lon: coords[0],
     street: props.street ?? null,
     housenumber: props.housenumber ?? null,
     postcode: props.postcode ?? null,
