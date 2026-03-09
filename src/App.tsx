@@ -18,6 +18,7 @@ import RestaurantsPage from "./pages/RestaurantsPage";
 import RestaurantDetailPage from "./pages/RestaurantDetailPage";
 import DishDetailPage from "./pages/DishDetailPage";
 import RecommenderPage from "./pages/RecommenderPage";
+import AdminIngestion from "./pages/AdminIngestion";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
