@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { getDishImage } from "@/lib/dish-images";
+import { useDishImage } from "@/hooks/use-dish-image";
 import type { DishWithCountry } from "@/hooks/use-homepage-data";
 import type { DbRestaurant } from "@/hooks/use-restaurants";
 
