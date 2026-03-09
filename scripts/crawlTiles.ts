@@ -142,11 +142,16 @@ function mapElement(el: any, tile: Tile): any {
     country: tile.code,
     lat,
     lng: lon,
-    address: [tags['addr:housenumber'], tags['addr:street'], tags['addr:city']]
-      .filter(Boolean).join(', ') || null,
-    phone: tags.phone ?? tags['contact:phone'] ?? null,
+    street: tags['addr:street'] ?? null,
+    housenumber: tags['addr:housenumber'] ?? null,
+    postcode: tags['addr:postcode'] ?? null,    phone: tags.phone ?? tags['contact:phone'] ?? null,
     website: tags.website ?? tags['contact:website'] ?? null,
     opening_hours: tags.opening_hours ?? null,
+        wheelchair: tags.wheelchair ?? null,
+    outdoor_seating: tags.outdoor_seating ?? null,
+    delivery: tags.delivery ?? null,
+    takeaway: tags.takeaway ?? null,
+    amenity: tags.amenity ?? null,
   };
 }
 
