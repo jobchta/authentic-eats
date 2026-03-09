@@ -1,4 +1,4 @@
-name: Import OSM Restaurant Data (ZERO-COST)
+name: Import Real OSM Restaurant Data (ZERO-COST)
 
 on:
   workflow_dispatch:
@@ -6,7 +6,7 @@ on:
     - cron: '0 2 * * 0'
 
 jobs:
-  import-osm-data:
+  import-osm-restaurants:
     runs-on: ubuntu-latest
 
     steps:
@@ -37,13 +37,11 @@ jobs:
           FLAG_EMOJI = {
             'US': '🇺🇸', 'JP': '🇯🇵', 'FR': '🇫🇷', 'GB': '🇬🇧', 'IT': '🇮🇹',
             'IN': '🇮🇳', 'SG': '🇸🇬', 'AU': '🇦🇺', 'MX': '🇲🇽', 'TH': '🇹🇭',
-            'TR': '🇹🇷', 'EG': '🇪🇬', 'AR': '🇦🇷', 'NG': '🇳🇬', 'KR': '🇰🇷',
           }
 
           CONTINENT_MAP = {
             'US': 'North America', 'JP': 'Asia', 'FR': 'Europe', 'GB': 'Europe', 'IT': 'Europe',
             'IN': 'Asia', 'SG': 'Asia', 'AU': 'Oceania', 'MX': 'North America', 'TH': 'Asia',
-            'TR': 'Europe', 'EG': 'Africa', 'AR': 'South America', 'NG': 'Africa', 'KR': 'Asia',
           }
 
           CITIES = [
@@ -59,7 +57,7 @@ jobs:
             ('Bangkok', 'TH', 13.7563, 100.5018, 'Asia'),
           ]
 
-          # Insert countries first with real pycountry data
+          # Upsert countries
           for city, code, lat, lon, region in CITIES:
             try:
               country = pycountry.countries.get(alpha_2=code)
@@ -78,15 +76,19 @@ jobs:
             except Exception as e:
               print(f"Country error {code}: {e}")
 
-          # Fetch OSM data and populate osm_restaurant_cache
+          # Get country_id mapping
+          countries_result = sb.table('countries').select('id,code').execute()
+          country_id_map = {r['code']: r['id'] for r in countries_result.data}
+          print(f"Loaded {len(country_id_map)} country IDs")
+
           total_imported = 0
 
+          # Import restaurants from OSM
           for city, code, lat, lon, region in CITIES:
-            try:
-              country = pycountry.countries.get(alpha_2=code)
-              cname = country.name
-            except:
-              cname = code
+            country_id = country_id_map.get(code)
+            if not country_id:
+              print(f"No country_id for {code}, skipping {city}")
+              continue
 
             print(f"\nFetching OSM data for {city}...")
             query = f"""
@@ -107,39 +109,36 @@ jobs:
               continue
 
             elements = data.get('elements', [])
-            print(f"Got {len(elements)} elements from OSM for {city}")
+            print(f"Got {len(elements)} OSM elements for {city}")
 
+            inserted = 0
             for el in elements:
               tags = el.get('tags', {})
               name = tags.get('name') or tags.get('name:en')
               if not name or len(name) < 2:
                 continue
 
-              osm_id = el.get('id')
-              lat_r = el.get('lat')
-              lon_r = el.get('lon')
-              cuisine = tags.get('cuisine', '').lower().split(';')[0].strip() or 'international'
+              cuisine_raw = tags.get('cuisine', '').lower().split(';')[0].strip()
+              cuisine_type = cuisine_raw if cuisine_raw else 'international'
 
               try:
-                sb.table('osm_restaurant_cache').upsert({
-                  'osm_id': osm_id,
+                sb.table('restaurants').insert({
                   'name': name[:200],
                   'city': city,
-                  'country': cname,
-                  'lat': lat_r,
-                  'lng': lon_r,
-                  'cuisine': cuisine,
+                  'country_id': country_id,
+                  'cuisine_type': cuisine_type,
+                  'tier': 'remarkable',
                   'address': tags.get('addr:full') or tags.get('addr:street', ''),
-                  'phone': tags.get('phone') or tags.get('contact:phone', ''),
-                  'website': tags.get('website') or tags.get('contact:website', ''),
-                  'opening_hours': tags.get('opening_hours', ''),
-                }, on_conflict='osm_id').execute()
+                  'website_url': tags.get('website') or tags.get('contact:website', ''),
+                }).execute()
+                inserted += 1
                 total_imported += 1
               except Exception as e:
+                print(f"Insert error for {name}: {e}")
                 pass
 
-            print(f"City {city} done. Total so far: {total_imported}")
+            print(f"City {city} done. Inserted {inserted} restaurants. Total: {total_imported}")
             time.sleep(5)
 
-          print(f"\n✅ IMPORT COMPLETE. Total OSM records: {total_imported}")
+          print(f"\n✅ IMPORT COMPLETE! Total restaurants: {total_imported}")
           PYEOF
