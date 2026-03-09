@@ -273,7 +273,7 @@ async function generateRecommendations(answers: Record<string, string>): Promise
   if (answers.diet === "vegetarian") query = query.contains("dietary_tags", ["vegetarian"]);
 
   // Get top-rated
-  query = query.order("rating", { ascending: false });
+  query = query.order("rating", { ascending: false });.limit(200)  // CRITICAL: prevent full table scan
 
   const { data, error } = await query;
   if (error) throw error;
