@@ -40,13 +40,24 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Bootstrap osm_restaurant_cache table
+        run: |
+          curl -s -X POST \
+            "${SUPABASE_URL}/rest/v1/rpc/exec_sql" \
+            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{}' || true
+          # Use bun script to ensure table exists
+          bun run scripts/ensureTable.ts || true
+
       - name: Run OSM tile crawler
         run: bun run scripts/crawlTiles.ts
 
       - name: Upload crawl report
-        if: always()
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: crawl-report-${{ github.run_number }}
           path: crawl-report.json
-          retention-days: 30
+          if-no-files-found: ignore
