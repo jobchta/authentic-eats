@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.generate-dish-image]
 verify_jwt = false
+
+[functions.ingest-country-foods]
+verify_jwt = false
