@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ThemeProvider } from "next-themes";
 import { AnimatePresence, motion } from "framer-motion";
+import { useScrollToHash } from "@/hooks/use-scroll-to-hash";
 import Index from "./pages/Index";
 import PricingPage from "./pages/PricingPage";
 import ForRestaurantsPage from "./pages/ForRestaurantsPage";

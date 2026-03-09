@@ -177,6 +177,11 @@ const PricingPage = () => {
                       : ""
                   }`}
                   size="lg"
+                  onClick={() => {
+                    if (tier.name === "Free") navigate("/auth");
+                    else if (tier.name === "Palate Pro") navigate("/auth");
+                    else navigate("/auth");
+                  }}
                 >
                   {tier.cta}
                   {tier.name !== "Free" && <ArrowRight className="h-4 w-4 ml-2" />}
