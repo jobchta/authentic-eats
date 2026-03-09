@@ -162,7 +162,7 @@ const AdminIngestion = () => {
             <div className="space-y-2">
               {recentJobs.slice(0, 8).map((job: any) => (
                 <div key={job.id} className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg text-sm">
-                  {job.status === "completed" && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+                  {job.status === "completed" && <CheckCircle2 className="h-4 w-4 text-primary" />}
                   {job.status === "failed" && <XCircle className="h-4 w-4 text-destructive" />}
                   {job.status === "running" && <Loader2 className="h-4 w-4 text-accent animate-spin" />}
                   <span className="font-body text-foreground">
