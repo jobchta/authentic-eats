@@ -40,7 +40,7 @@ export function useRestaurantsPaginated(filters?: {
     queryKey: ["restaurants-paginated", filters],
     queryFn: async ({ pageParam = 0 }) => {
       let query = supabase
-        .from("restaurants")
+        .from("osm_restaurant_cache")
         .select("*, country:countries(*)")
         .order("rating", { ascending: false })
         .range(pageParam, pageParam + PAGE_SIZE - 1);
@@ -89,7 +89,7 @@ export function useRestaurants(options?: { tier?: string; limit?: number }) {
     queryKey: ["restaurants", options?.tier, options?.limit],
     queryFn: async () => {
       let query = supabase
-        .from("restaurants")
+        .from("osm_restaurant_cache")
         .select("*, country:countries(*)")
         .order("rating", { ascending: false });
 
@@ -113,7 +113,7 @@ export function useFeaturedRestaurants() {
     queryKey: ["featured-restaurants"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("restaurants")
+        .from("osm_restaurant_cache")
         .select("*, country:countries(*)")
         .eq("is_featured", true)
         .order("rating", { ascending: false })
@@ -130,7 +130,7 @@ export function useRestaurantStats() {
     queryKey: ["restaurant-stats"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("restaurants")
+        .from("osm_restaurant_cache")
         .select("tier, country:countries(continent)");
       if (error) throw error;
 
