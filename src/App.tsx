@@ -22,7 +22,16 @@ import AdminIngestion from "./pages/AdminIngestion";
 import IngredientsPage from "./pages/IngredientsPage";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,      // 5 min — data stays fresh, no re-fetch on every focus
+      gcTime: 10 * 60 * 1000,        // 10 min — keep unused cache in memory
+      retry: 1,                       // only 1 retry on failure (default is 3)
+      refetchOnWindowFocus: false,    // don't hammer Supabase every tab switch
+    },
+  },
+});
 
 const PageTransition = ({ children }: { children: React.ReactNode }) => (
   <motion.div
@@ -51,29 +60,29 @@ const AnimatedRoutes = () => {
         <Route path="/restaurants" element={<PageTransition><RestaurantsPage /></PageTransition>} />
         <Route path="/restaurants/:id" element={<PageTransition><RestaurantDetailPage /></PageTransition>} />
         <Route path="/dishes/:id" element={<PageTransition><DishDetailPage /></PageTransition>} />
-        <Route path="/recommend" element={<PageTransition><RecommenderPage /></PageTransition>} />
-        <Route path="/ingredients" element={<PageTransition><IngredientsPage /></PageTransition>} />
+        <Route path="/recommender" element={<PageTransition><RecommenderPage /></PageTransition>} />
         <Route path="/admin" element={<PageTransition><AdminIngestion /></PageTransition>} />
-        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+        <Route path="/ingredients" element={<PageTransition><IngredientsPage /></PageTransition>} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>
   );
 };
 
 const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
+  <QueryClientProvider client={queryClient}>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <TooltipProvider>
+        <AuthProvider>
           <BrowserRouter>
             <AnimatedRoutes />
+            <Toaster />
+            <Sonner />
           </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </ThemeProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </ThemeProvider>
+  </QueryClientProvider>
 );
 
 export default App;
