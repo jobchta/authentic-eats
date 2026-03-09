@@ -10,7 +10,7 @@ import * as fs from 'fs';
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const CITY_FILTER = process.env.CITY || '';
+const CITY_FILTER = process.env.CITY_FILTER || '';
 const MAX_TILES = parseInt(process.env.MAX_TILES || '50', 10);
 const BATCH_INSERT = 500;
 const TILE_DEG = 2; // 2x2 degree tiles
