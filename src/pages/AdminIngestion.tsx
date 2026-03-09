@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useIngestionStats } from "@/hooks/use-ingestion-stats";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -9,13 +11,49 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Database, Flame, Globe, Utensils, Leaf, ChefHat, Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { Database, Flame, Globe, Utensils, Leaf, ChefHat, Loader2, CheckCircle2, XCircle, ShieldAlert } from "lucide-react";
 
 const AdminIngestion = () => {
+  const { user, loading: authLoading } = useAuth();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [checkingRole, setCheckingRole] = useState(true);
+  const navigate = useNavigate();
   const { countries, countriesLoading, totalStats, recentJobs } = useIngestionStats();
   const [deepResearch, setDeepResearch] = useState(false);
   const [runningIds, setRunningIds] = useState<Set<string>>(new Set());
   const queryClient = useQueryClient();
+
+  // Check admin role
+  useEffect(() => {
+    const checkAdminRole = async () => {
+      if (authLoading) return;
+      if (!user) {
+        setIsAdmin(false);
+        setCheckingRole(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      setIsAdmin(!error && !!data);
+      setCheckingRole(false);
+    };
+
+    checkAdminRole();
+  }, [user, authLoading]);
+
+  // Redirect non-admins
+  useEffect(() => {
+    if (!checkingRole && !authLoading && !isAdmin) {
+      toast.error("Access denied. Admin privileges required.");
+      navigate("/");
+    }
+  }, [checkingRole, authLoading, isAdmin, navigate]);
 
   const runIngestion = async (countryId: string, countryName: string) => {
     setRunningIds((prev) => new Set(prev).add(countryId));
@@ -46,6 +84,36 @@ const AdminIngestion = () => {
     }
   };
 
+  // Loading state
+  if (authLoading || checkingRole) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-24 pb-16 container mx-auto px-4">
+          <div className="flex items-center justify-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Access denied (will redirect)
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main className="pt-24 pb-16 container mx-auto px-4 text-center">
+          <ShieldAlert className="h-16 w-16 mx-auto text-destructive mb-4" />
+          <h1 className="font-display text-2xl font-bold text-foreground">Access Denied</h1>
+          <p className="font-body text-muted-foreground mt-2">Admin privileges required.</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   const statCards = [
     { icon: Utensils, label: "Dishes", value: totalStats?.dishes ?? "—", color: "text-accent" },
     { icon: Leaf, label: "Ingredients", value: totalStats?.ingredients ?? "—", color: "text-primary" },
@@ -60,6 +128,9 @@ const AdminIngestion = () => {
         <div className="flex items-center gap-3 mb-6">
           <Database className="h-6 w-6 text-accent" />
           <h1 className="font-display text-3xl font-bold text-foreground">Data Ingestion</h1>
+          <Badge variant="outline" className="font-body text-xs ml-auto">
+            <ShieldAlert className="h-3 w-3 mr-1" /> Admin
+          </Badge>
         </div>
 
         {/* Global Stats */}
@@ -91,7 +162,7 @@ const AdminIngestion = () => {
             <div className="space-y-2">
               {recentJobs.slice(0, 8).map((job: any) => (
                 <div key={job.id} className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg text-sm">
-                  {job.status === "completed" && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                  {job.status === "completed" && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
                   {job.status === "failed" && <XCircle className="h-4 w-4 text-destructive" />}
                   {job.status === "running" && <Loader2 className="h-4 w-4 text-accent animate-spin" />}
                   <span className="font-body text-foreground">

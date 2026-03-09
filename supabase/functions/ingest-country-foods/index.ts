@@ -12,9 +12,46 @@ Deno.serve(async (req) => {
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-  const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+  // Auth check - require admin role
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const userSupabase = createClient(supabaseUrl, supabaseAnonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const token = authHeader.replace("Bearer ", "");
+  const { data: claims, error: claimsErr } = await userSupabase.auth.getClaims(token);
+  if (claimsErr || !claims?.claims?.sub) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const userId = claims.claims.sub;
+
+  // Check admin role using service role client
+  const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
+  const { data: roleData, error: roleErr } = await adminSupabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
+
+  if (roleErr || !roleData) {
+    return new Response(JSON.stringify({ error: "Admin access required" }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   if (!lovableApiKey) {
     return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
@@ -31,7 +68,7 @@ Deno.serve(async (req) => {
     }
 
     // Get country info
-    const { data: country, error: countryErr } = await supabase
+    const { data: country, error: countryErr } = await adminSupabase
       .from("countries")
       .select("*")
       .eq("id", countryId)
@@ -39,7 +76,7 @@ Deno.serve(async (req) => {
     if (countryErr || !country) throw new Error("Country not found");
 
     // Create ingestion job
-    const { data: job, error: jobErr } = await supabase
+    const { data: job, error: jobErr } = await adminSupabase
       .from("ingestion_jobs")
       .insert({ country_id: countryId, status: "running", deep_research: deepResearch ?? false })
       .select()
@@ -47,7 +84,7 @@ Deno.serve(async (req) => {
     if (jobErr) throw jobErr;
 
     // Get existing dishes to avoid duplicates
-    const { data: existingDishes } = await supabase
+    const { data: existingDishes } = await adminSupabase
       .from("dishes")
       .select("name")
       .eq("country_id", countryId);
@@ -111,7 +148,7 @@ Requirements:
     if (!aiResponse.ok) {
       const errText = await aiResponse.text();
       console.error("AI gateway error:", aiResponse.status, errText);
-      await supabase.from("ingestion_jobs").update({
+      await adminSupabase.from("ingestion_jobs").update({
         status: "failed", error_message: `AI error ${aiResponse.status}`, completed_at: new Date().toISOString(),
       }).eq("id", job.id);
       return new Response(JSON.stringify({ error: "AI generation failed" }), {
@@ -129,7 +166,7 @@ Requirements:
       parsed = JSON.parse(jsonStr);
     } catch {
       console.error("Failed to parse AI response:", content.substring(0, 500));
-      await supabase.from("ingestion_jobs").update({
+      await adminSupabase.from("ingestion_jobs").update({
         status: "failed", error_message: "Failed to parse AI response", completed_at: new Date().toISOString(),
       }).eq("id", job.id);
       return new Response(JSON.stringify({ error: "Failed to parse AI response" }), {
@@ -146,7 +183,7 @@ Requirements:
       if (existingNames.has(dish.name?.toLowerCase())) continue;
 
       // Insert dish
-      const { data: newDish, error: dishErr } = await supabase
+      const { data: newDish, error: dishErr } = await adminSupabase
         .from("dishes")
         .insert({
           name: dish.name,
@@ -171,7 +208,7 @@ Requirements:
       if (dish.ingredients?.length) {
         for (const ing of dish.ingredients) {
           // Upsert ingredient
-          let { data: existingIng } = await supabase
+          let { data: existingIng } = await adminSupabase
             .from("ingredients")
             .select("id")
             .ilike("name", ing.name)
@@ -179,7 +216,7 @@ Requirements:
             .single();
 
           if (!existingIng) {
-            const { data: newIng } = await supabase
+            const { data: newIng } = await adminSupabase
               .from("ingredients")
               .insert({
                 name: ing.name,
@@ -191,15 +228,11 @@ Requirements:
             existingIng = newIng;
             if (newIng) ingredientsAdded++;
           }
-
-          if (existingIng && dish.recipe) {
-            // We'll link after recipe insert
-          }
         }
       }
 
       if (dish.recipe) {
-        const { data: newRecipe, error: recipeErr } = await supabase
+        const { data: newRecipe, error: recipeErr } = await adminSupabase
           .from("recipes")
           .insert({
             dish_id: newDish.id,
@@ -217,7 +250,7 @@ Requirements:
           // Link ingredients to recipe
           if (dish.ingredients?.length) {
             for (const ing of dish.ingredients) {
-              const { data: ingRecord } = await supabase
+              const { data: ingRecord } = await adminSupabase
                 .from("ingredients")
                 .select("id")
                 .ilike("name", ing.name)
@@ -225,7 +258,7 @@ Requirements:
                 .single();
 
               if (ingRecord) {
-                await supabase.from("recipe_ingredients").insert({
+                await adminSupabase.from("recipe_ingredients").insert({
                   recipe_id: newRecipe.id,
                   ingredient_id: ingRecord.id,
                   quantity: ing.quantity || null,
@@ -239,7 +272,7 @@ Requirements:
     }
 
     // Update job status
-    await supabase.from("ingestion_jobs").update({
+    await adminSupabase.from("ingestion_jobs").update({
       status: "completed",
       dishes_added: dishesAdded,
       ingredients_added: ingredientsAdded,
