@@ -170,6 +170,13 @@ async function main() {
   console.log(`City/country filter: "${CITY_FILTER || 'all countries'}"`);
   console.log(`Max tiles per run: ${MAX_TILES}`);
   console.log('');
+    // Reload PostgREST schema cache to ensure osm_restaurant_cache is visible
+  try {
+    await supabase.rpc('reload_postgrest_schema');
+    console.log('PostgREST schema cache refreshed.');
+  } catch (e: any) {
+    console.log(`Schema reload skipped (${e?.message?.slice(0, 60) ?? 'no error'}) - continuing...`);
+  }
 
   const allTiles = generateTiles(CITY_FILTER);
   console.log(`Total tiles generated: ${allTiles.length}`);
