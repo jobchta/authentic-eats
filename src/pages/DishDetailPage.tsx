@@ -90,7 +90,13 @@ const DishDetailPage = () => {
     );
   }
 
-  const image = getDishImage(dish.name, dish.cuisine_type);
+  const { imageUrl: image } = useDishImage(
+    dish.id,
+    dish.name,
+    dish.cuisine_type,
+    dish.description,
+    (dish as any).image_url
+  );
 
   return (
     <div className="min-h-screen bg-background">
