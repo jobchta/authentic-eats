@@ -3,7 +3,8 @@
  * crawlTiles.ts - BBOX TILE MODE
  * Splits countries into 2x2 degree bounding box tiles.
  * Each tile query is small enough for Overpass to handle reliably.
- * Reads CITY and MAX_TILES from env (set by workflow_dispatch inputs).
+ * Upserts into osm_restaurant_cache table.
+ * Reads CITY_FILTER and MAX_TILES from env (set by workflow_dispatch inputs).
  */
 import { createClient } from '@supabase/supabase-js';
 import * as fs from 'fs';
@@ -32,21 +33,22 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
 });
 
 // Country bounding boxes [minLat, minLon, maxLat, maxLon]
-const COUNTRIES: { name: string; bbox: [number, number, number, number] }[] = [
-  { name: 'India',     bbox: [6.5,  68.0,  37.5, 97.5] },
-  { name: 'Japan',     bbox: [24.0, 122.0, 46.0, 146.0] },
-  { name: 'Singapore', bbox: [1.15, 103.6, 1.47, 104.1] },
-  { name: 'UAE',       bbox: [22.5, 51.0,  26.1, 56.5] },
-  { name: 'UK',        bbox: [49.8, -8.2,  60.9, 2.0] },
-  { name: 'France',    bbox: [41.3, -5.2,  51.1, 9.7] },
-  { name: 'USA',       bbox: [24.5, -125.0, 49.5, -66.9] },
-  { name: 'Australia', bbox: [-43.6, 113.3, -10.7, 153.6] },
-  { name: 'Germany',   bbox: [47.3,  5.8,  55.1, 15.1] },
-  { name: 'Brazil',    bbox: [-33.8, -73.9, 5.3, -34.7] },
+const COUNTRIES: { name: string; code: string; bbox: [number, number, number, number] }[] = [
+  { name: 'India',     code: 'IN', bbox: [6.5,  68.0,  37.5, 97.5] },
+  { name: 'Japan',     code: 'JP', bbox: [24.0, 122.0, 46.0, 146.0] },
+  { name: 'Singapore', code: 'SG', bbox: [1.15, 103.6, 1.47, 104.1] },
+  { name: 'UAE',       code: 'AE', bbox: [22.5, 51.0,  26.1, 56.5] },
+  { name: 'UK',        code: 'GB', bbox: [49.8, -8.2,  60.9, 2.0] },
+  { name: 'France',    code: 'FR', bbox: [41.3, -5.2,  51.1, 9.7] },
+  { name: 'USA',       code: 'US', bbox: [24.5, -125.0, 49.5, -66.9] },
+  { name: 'Australia', code: 'AU', bbox: [-43.6, 113.3, -10.7, 153.6] },
+  { name: 'Germany',   code: 'DE', bbox: [47.3,  5.8,  55.1, 15.1] },
+  { name: 'Brazil',    code: 'BR', bbox: [-33.8, -73.9, 5.3, -34.7] },
 ];
 
 interface Tile {
   country: string;
+  code: string;
   minLat: number;
   minLon: number;
   maxLat: number;
@@ -57,21 +59,25 @@ interface Tile {
 function generateTiles(filter: string): Tile[] {
   const tiles: Tile[] = [];
   const countries = filter
-    ? COUNTRIES.filter(c => c.name.toLowerCase().includes(filter.toLowerCase()))
+    ? COUNTRIES.filter(c =>
+        c.name.toLowerCase().includes(filter.toLowerCase()) ||
+        c.code.toLowerCase() === filter.toLowerCase()
+      )
     : COUNTRIES;
 
   for (const country of countries) {
     const [minLat, minLon, maxLat, maxLon] = country.bbox;
     for (let lat = minLat; lat < maxLat; lat += TILE_DEG) {
       for (let lon = minLon; lon < maxLon; lon += TILE_DEG) {
-        const s = Math.max(lat, minLat);
-        const w = Math.max(lon, minLon);
-        const n = Math.min(lat + TILE_DEG, maxLat);
-        const e = Math.min(lon + TILE_DEG, maxLon);
+        const s = parseFloat(Math.max(lat, minLat).toFixed(4));
+        const w = parseFloat(Math.max(lon, minLon).toFixed(4));
+        const n = parseFloat(Math.min(lat + TILE_DEG, maxLat).toFixed(4));
+        const e = parseFloat(Math.min(lon + TILE_DEG, maxLon).toFixed(4));
         tiles.push({
           country: country.name,
+          code: country.code,
           minLat: s, minLon: w, maxLat: n, maxLon: e,
-          key: `${country.name}:${s.toFixed(1)},${w.toFixed(1)},${n.toFixed(1)},${e.toFixed(1)}`,
+          key: `${country.code}:${s},${w},${n},${e}`,
         });
       }
     }
@@ -105,7 +111,6 @@ out center tags;`;
 
   if (!resp.ok) {
     const text = await resp.text();
-    // Try next mirror on 5xx
     if (resp.status >= 500 && mirrorIdx < OVERPASS_MIRRORS.length - 1) {
       console.log(`  [retry] Mirror ${mirror} failed (${resp.status}), trying next...`);
       await sleep(3000);
@@ -118,25 +123,30 @@ out center tags;`;
   return data.elements ?? [];
 }
 
-function mapElement(el: any, country: string): any {
+function mapElement(el: any, tile: Tile): any {
   const lat = el.lat ?? el.center?.lat;
   const lon = el.lon ?? el.center?.lon;
   if (!lat || !lon) return null;
   const tags = el.tags ?? {};
+  const osmId = Number(el.id);
+  if (!osmId) return null;
+
+  // Derive city from tags or use country as fallback
+  const city = tags['addr:city'] ?? tags['is_in:city'] ?? tags['addr:county'] ?? tile.country;
+
   return {
-    osm_id: String(el.id),
+    osm_id: osmId,
     name: tags.name ?? tags['name:en'] ?? 'Unnamed',
+    cuisine: tags.cuisine ?? null,
+    city,
+    country: tile.code,
     lat,
-    lon,
-    country,
-    amenity_type: tags.amenity ?? 'restaurant',
+    lng: lon,
     address: [tags['addr:housenumber'], tags['addr:street'], tags['addr:city']]
       .filter(Boolean).join(', ') || null,
-    cuisine: tags.cuisine ?? null,
     phone: tags.phone ?? tags['contact:phone'] ?? null,
     website: tags.website ?? tags['contact:website'] ?? null,
     opening_hours: tags.opening_hours ?? null,
-    raw_tags: tags,
   };
 }
 
@@ -145,7 +155,7 @@ async function upsertBatch(rows: any[]): Promise<number> {
   for (let i = 0; i < rows.length; i += BATCH_INSERT) {
     const batch = rows.slice(i, i + BATCH_INSERT);
     const { error, count } = await supabase
-      .from('restaurants')
+      .from('osm_restaurant_cache')
       .upsert(batch, { onConflict: 'osm_id', count: 'exact' });
     if (error) throw new Error(`Supabase upsert error: ${error.message}`);
     total += count ?? batch.length;
@@ -156,8 +166,9 @@ async function upsertBatch(rows: any[]): Promise<number> {
 
 async function main() {
   console.log('=== OSM Restaurant Tile Crawler ===');
-  console.log(`City filter: "${CITY_FILTER || 'all countries'}"`);
-  console.log(`Max tiles: ${MAX_TILES}`);
+  console.log(`Target table: osm_restaurant_cache`);
+  console.log(`City/country filter: "${CITY_FILTER || 'all countries'}"`);
+  console.log(`Max tiles per run: ${MAX_TILES}`);
   console.log('');
 
   const allTiles = generateTiles(CITY_FILTER);
@@ -177,7 +188,7 @@ async function main() {
     console.log(`[${tileIdx}/${tiles.length}] ${tile.key}`);
     try {
       const elements = await fetchTile(tile);
-      const rows = elements.map(el => mapElement(el, tile.country)).filter(Boolean);
+      const rows = elements.map(el => mapElement(el, tile)).filter(Boolean);
       console.log(`  Got ${elements.length} elements -> ${rows.length} valid`);
 
       if (rows.length > 0) {
@@ -198,7 +209,7 @@ async function main() {
   }
 
   console.log('');
-  console.log(`=== DONE. Total restaurants upserted: ${grandTotal} ===`);
+  console.log(`=== DONE. Total upserted: ${grandTotal} ===`);
   console.log(`Tiles processed: ${tileIdx} / Total available: ${allTiles.length}`);
 
   fs.writeFileSync('crawl-report.json', JSON.stringify({
@@ -207,7 +218,7 @@ async function main() {
     max_tiles: MAX_TILES,
     tiles_processed: tileIdx,
     tiles_available: allTiles.length,
-    total: grandTotal,
+    total_upserted: grandTotal,
     tiles: report,
   }, null, 2));
   console.log('Report written to crawl-report.json');
