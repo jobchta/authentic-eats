@@ -3,10 +3,10 @@ import { motion } from "framer-motion";
 import { ArrowUp, Heart } from "lucide-react";
 
 const socialLinks = [
-  { label: "Twitter", icon: "𝕏", href: "https://twitter.com" },
-  { label: "Instagram", icon: "📷", href: "https://instagram.com" },
-  { label: "YouTube", icon: "▶", href: "https://youtube.com" },
-  { label: "TikTok", icon: "♪", href: "https://tiktok.com" },
+  { label: "Twitter", icon: "𝕏", href: "#" },
+  { label: "Instagram", icon: "📷", href: "#" },
+  { label: "YouTube", icon: "▶", href: "#" },
+  { label: "TikTok", icon: "♪", href: "#" },
 ];
 
 const Footer = () => {
