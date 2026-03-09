@@ -1,73 +1,101 @@
-# Welcome to your Lovable project
+# 🍽️ Palate Guide
 
-## Project info
+**The world's most trusted guide to authentic food.** Discover dishes, restaurants, and cuisines from every corner of the globe — curated by food lovers, for food lovers.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## ✨ Features
 
-**Use Lovable**
+- **🌍 Interactive World Map** — Explore cuisines by country with a beautiful SVG map
+- **🍜 Dish Discovery** — Browse signature dishes from 28+ countries with ratings, tags, and spice levels
+- **🏪 Restaurant Finder** — Curated restaurant listings + live OpenStreetMap discovery
+- **🤖 AI Recommender** — Get personalized dish recommendations based on your preferences
+- **🛂 Food Passport** — Track countries you've explored and dishes you've tried
+- **🌙 Dark Mode** — Full light/dark theme support
+- **📱 Responsive Design** — Optimized for mobile, tablet, and desktop
+- **🔐 Authentication** — Email-based sign up/sign in with protected routes
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## 🛠️ Tech Stack
 
-Changes made via Lovable will be committed automatically to this repo.
+| Layer | Technology |
+|-------|-----------|
+| **Framework** | React 18 + TypeScript |
+| **Build Tool** | Vite |
+| **Styling** | Tailwind CSS + shadcn/ui |
+| **Animations** | Framer Motion |
+| **Routing** | React Router v6 |
+| **State/Data** | TanStack React Query |
+| **Backend** | Lovable Cloud (Supabase) |
+| **Maps** | React Simple Maps |
+| **Charts** | Recharts |
 
-**Use your preferred IDE**
+## 🚀 Getting Started
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Prerequisites
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- [Node.js](https://nodejs.org/) v18+ (recommended: use [nvm](https://github.com/nvm-sh/nvm))
+- npm or bun
 
-Follow these steps:
+### Installation
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+```bash
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/palate-guide.git
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to the project
+cd palate-guide
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the dev server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be available at `http://localhost:5173`.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📁 Project Structure
 
-**Use GitHub Codespaces**
+```
+src/
+├── assets/          # Food dish images
+├── components/      # Reusable UI components
+│   ├── ui/          # shadcn/ui primitives
+│   ├── Header.tsx   # Navigation header
+│   ├── Footer.tsx   # Site footer
+│   ├── WorldMap.tsx  # Interactive globe map
+│   └── ...
+├── data/            # Static food data
+├── hooks/           # Custom React hooks (auth, restaurants, passport)
+├── integrations/    # Backend client configuration
+├── lib/             # Utilities
+├── pages/           # Route pages
+│   ├── Index.tsx
+│   ├── RestaurantsPage.tsx
+│   ├── MapPage.tsx
+│   ├── PassportPage.tsx
+│   ├── RecommenderPage.tsx
+│   └── ...
+└── main.tsx         # App entry point
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🌐 Deployment
 
-## What technologies are used for this project?
+This project is deployed via [Lovable](https://lovable.dev). To publish:
 
-This project is built with:
+1. Open the project in the Lovable editor
+2. Click **Share → Publish**
+3. Optionally connect a custom domain in **Settings → Domains**
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## 📄 License
 
-## How can I deploy this project?
+This project is private. All rights reserved.
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+---
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+<p align="center">Made with ❤️ for food lovers everywhere</p>
