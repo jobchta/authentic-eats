@@ -88,6 +88,32 @@ const AdminIngestion = () => {
     }
   };
 
+  const runBulkIngestion = async () => {
+    setBulkRunning(true);
+    toast.info(`Starting bulk ingestion for ${underCoveredCount} countries...`);
+    let completed = 0;
+    for (const country of underCovered) {
+      try {
+        await supabase.functions.invoke("ingest-country-foods", {
+          body: { countryId: country.id, deepResearch },
+        });
+        completed++;
+        if (completed % 5 === 0) {
+          toast.info(`Progress: ${completed}/${underCoveredCount} countries done`);
+          queryClient.invalidateQueries({ queryKey: ["ingestion-countries"] });
+        }
+      } catch (err: any) {
+        console.error(`Failed for ${country.name}:`, err);
+      }
+    }
+    toast.success(`Bulk ingestion done: ${completed}/${underCoveredCount} countries processed`);
+    queryClient.invalidateQueries({ queryKey: ["ingestion"] });
+    queryClient.invalidateQueries({ queryKey: ["ingestion-totals"] });
+    queryClient.invalidateQueries({ queryKey: ["ingestion-countries"] });
+    queryClient.invalidateQueries({ queryKey: ["ingestion-jobs"] });
+    setBulkRunning(false);
+  };
+
   // Loading state
   if (authLoading || checkingRole) {
     return (
