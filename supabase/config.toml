@@ -2,3 +2,6 @@ project_id = "ywznviihumlfbqkildfh"
 
 [functions.osm-restaurants]
 verify_jwt = false
+
+[functions.generate-dish-image]
+verify_jwt = false
