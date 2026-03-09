@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
 import { allDishImages } from "@/lib/dish-images";
+import { useNavigate } from "react-router-dom";
+import { useRealStats } from "@/hooks/use-real-stats";
 
 const headlines = [
   { top: "Discover Food", bottom: "Worth Traveling For" },
@@ -21,6 +23,15 @@ const typewriterPhrases = [
 
 const floatingEmojis = ["🍜", "🌮", "🍕", "🥘", "🍣", "🥐", "🍛", "🥩", "🍲", "🧆"];
 
+const quickTags = [
+  { label: "🔥 Trending", query: "" },
+  { label: "🍕 Pizza", query: "pizza" },
+  { label: "🍜 Ramen", query: "ramen" },
+  { label: "🌮 Tacos", query: "tacos" },
+  { label: "🥘 Curry", query: "curry" },
+  { label: "🥐 Pastries", query: "pastry" },
+];
+
 const HeroSection = () => {
   const [current, setCurrent] = useState(0);
   const [bgIndex, setBgIndex] = useState(0);
@@ -28,6 +39,25 @@ const HeroSection = () => {
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const navigate = useNavigate();
+  const { data: stats } = useRealStats();
+
+  const handleSearch = () => {
+    if (searchValue.trim()) {
+      navigate(`/restaurants?q=${encodeURIComponent(searchValue.trim())}`);
+    } else {
+      navigate("/restaurants");
+    }
+  };
+
+  const handleTagClick = (query: string) => {
+    if (query) {
+      navigate(`/restaurants?q=${encodeURIComponent(query)}`);
+    } else {
+      navigate("/restaurants");
+    }
+  };
 
   // Headline rotation
   useEffect(() => {
@@ -92,36 +122,27 @@ const HeroSection = () => {
       {/* Floating food emojis */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {floatingEmojis.map((emoji, i) => (
-          <motion.span
+          <span
             key={i}
-            className="absolute text-2xl opacity-20"
+            className="absolute text-2xl opacity-20 animate-float-up"
             style={{
               left: `${5 + i * 9.5}%`,
               bottom: `-40px`,
-            }}
-            animate={{
-              y: [0, -window.innerHeight - 100],
-              x: [0, Math.sin(i) * 50],
-              rotate: [0, 360],
-            }}
-            transition={{
-              duration: 12 + i * 2,
-              repeat: Infinity,
-              delay: i * 1.5,
-              ease: "linear",
+              animationDelay: `${i * 1.5}s`,
+              animationDuration: `${12 + i * 2}s`,
             }}
           >
             {emoji}
-          </motion.span>
+          </span>
         ))}
       </div>
 
       {/* Floating stats */}
       <div className="absolute top-24 right-8 hidden lg:flex flex-col gap-3 z-10">
         {[
-          { label: "Dishes catalogued", value: "38,400+" },
-          { label: "Restaurants rated", value: "13,600+" },
-          { label: "Countries covered", value: "195" },
+          { label: "Dishes catalogued", value: stats?.dishes?.toLocaleString() ?? "—" },
+          { label: "Restaurants rated", value: stats?.restaurants?.toLocaleString() ?? "—" },
+          { label: "Countries covered", value: stats?.countries?.toLocaleString() ?? "—" },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -178,27 +199,30 @@ const HeroSection = () => {
             transition={{ delay: 0.6, duration: 0.6 }}
             className="font-body text-lg md:text-xl text-primary-foreground/70 mb-10 max-w-xl leading-relaxed"
           >
-            Curated by 184,000+ food lovers across 195 countries. Every dish verified. Every restaurant authentic.
+            Curated by food lovers across {stats?.countries ?? "190+"} countries. Every dish verified. Every restaurant authentic.
           </motion.p>
 
-          <motion.div
+          <motion.form
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8, duration: 0.6 }}
             className="flex flex-col sm:flex-row gap-3 max-w-xl"
+            onSubmit={(e) => { e.preventDefault(); handleSearch(); }}
           >
             <div className="relative flex-1 group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
                 placeholder={placeholder}
                 className="pl-12 h-14 text-base bg-background/95 backdrop-blur-md border-border font-body rounded-xl shadow-lg focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-all"
               />
               <div className="absolute inset-0 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none glow-gold" />
             </div>
-            <Button className="h-14 px-10 font-body font-bold text-base rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all">
+            <Button type="submit" className="h-14 px-10 font-body font-bold text-base rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all">
               Explore
             </Button>
-          </motion.div>
+          </motion.form>
 
           {/* Quick tags */}
           <motion.div
@@ -207,14 +231,15 @@ const HeroSection = () => {
             transition={{ delay: 1.2, duration: 0.6 }}
             className="flex flex-wrap gap-2 mt-6"
           >
-            {["🔥 Trending", "🍕 Pizza", "🍜 Ramen", "🌮 Tacos", "🥘 Curry", "🥐 Pastries"].map((tag) => (
+            {quickTags.map((tag) => (
               <motion.button
-                key={tag}
+                key={tag.label}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
+                onClick={() => handleTagClick(tag.query)}
                 className="font-body text-xs text-primary-foreground/70 glass-dark hover:bg-white/15 px-4 py-2 rounded-full transition-colors"
               >
-                {tag}
+                {tag.label}
               </motion.button>
             ))}
           </motion.div>

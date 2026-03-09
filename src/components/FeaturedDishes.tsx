@@ -18,6 +18,7 @@ const DishCard = forwardRef<HTMLElement, any>(({ dish, img, isFavorited, isHero,
     <motion.article
       ref={ref}
       {...motionProps}
+      onClick={onClick}
       className={`group bg-background rounded-2xl overflow-hidden border border-border cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 ${
         isHero ? "sm:col-span-2 sm:row-span-1" : ""
       }`}

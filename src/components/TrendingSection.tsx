@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { getDishImage, continentGradients } from "@/lib/dish-images";
 import { Skeleton } from "@/components/ui/skeleton";
 
-function TiltCard({ children, className }: { children: React.ReactNode; className?: string }) {
+function TiltCard({ children, className, onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -28,6 +28,7 @@ function TiltCard({ children, className }: { children: React.ReactNode; classNam
       ref={ref}
       onMouseMove={handleMouse}
       onMouseLeave={reset}
+      onClick={onClick}
       style={{ rotateX, rotateY, transformStyle: "preserve-3d" }}
       className={className}
     >
@@ -44,7 +45,6 @@ const TrendingSection = () => {
   const navigate = useNavigate();
 
   const trendingDishes = (dishes ?? []).slice(0, 8);
-  // Double for marquee
   const marqueeItems = [...trendingDishes, ...trendingDishes];
 
   return (
@@ -90,6 +90,7 @@ const TrendingSection = () => {
                   <TiltCard
                     key={`${dish.id}-${i}`}
                     className="flex-shrink-0 w-[340px] cursor-pointer perspective-[800px]"
+                    onClick={() => navigate(`/dishes/${dish.id}`)}
                   >
                     <div className="relative aspect-[3/4] rounded-2xl overflow-hidden shadow-lg group">
                       {img ? (
@@ -123,6 +124,7 @@ const TrendingSection = () => {
                             if (!user) { navigate("/auth"); return; }
                             toggleFavorite.mutate({ dishId: dish.id, isFavorited });
                           }}
+                          aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
                           className={`p-2.5 rounded-full glass-dark transition-all hover:scale-110 ${
                             isFavorited ? "text-destructive" : "text-white/70 hover:text-destructive"
                           }`}

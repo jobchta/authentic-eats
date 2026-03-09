@@ -57,10 +57,7 @@ const EditorialStories = () => {
               Beyond the Plate
             </h2>
           </motion.div>
-          <button className="hidden md:flex items-center gap-2 font-body text-sm font-bold text-primary hover:text-primary/80 transition-colors group">
-            All stories
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-          </button>
+          {/* Stories section is editorial — more coming soon */}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
