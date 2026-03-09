@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Database, Flame, Globe, Utensils, Leaf, ChefHat, Loader2, CheckCircle2, XCircle, ShieldAlert } from "lucide-react";
+import { Database, Flame, Globe, Utensils, Leaf, ChefHat, Loader2, CheckCircle2, XCircle, ShieldAlert, Zap } from "lucide-react";
 
 const AdminIngestion = () => {
   const { user, loading: authLoading } = useAuth();
@@ -21,7 +21,11 @@ const AdminIngestion = () => {
   const { countries, countriesLoading, totalStats, recentJobs } = useIngestionStats();
   const [deepResearch, setDeepResearch] = useState(false);
   const [runningIds, setRunningIds] = useState<Set<string>>(new Set());
+  const [bulkRunning, setBulkRunning] = useState(false);
   const queryClient = useQueryClient();
+
+  const underCovered = (countries || []).filter((c) => c.dish_count < 10);
+  const underCoveredCount = underCovered.length;
 
   // Check admin role
   useEffect(() => {
@@ -82,6 +86,32 @@ const AdminIngestion = () => {
         return next;
       });
     }
+  };
+
+  const runBulkIngestion = async () => {
+    setBulkRunning(true);
+    toast.info(`Starting bulk ingestion for ${underCoveredCount} countries...`);
+    let completed = 0;
+    for (const country of underCovered) {
+      try {
+        await supabase.functions.invoke("ingest-country-foods", {
+          body: { countryId: country.id, deepResearch },
+        });
+        completed++;
+        if (completed % 5 === 0) {
+          toast.info(`Progress: ${completed}/${underCoveredCount} countries done`);
+          queryClient.invalidateQueries({ queryKey: ["ingestion-countries"] });
+        }
+      } catch (err: any) {
+        console.error(`Failed for ${country.name}:`, err);
+      }
+    }
+    toast.success(`Bulk ingestion done: ${completed}/${underCoveredCount} countries processed`);
+    queryClient.invalidateQueries({ queryKey: ["ingestion"] });
+    queryClient.invalidateQueries({ queryKey: ["ingestion-totals"] });
+    queryClient.invalidateQueries({ queryKey: ["ingestion-countries"] });
+    queryClient.invalidateQueries({ queryKey: ["ingestion-jobs"] });
+    setBulkRunning(false);
   };
 
   // Loading state
@@ -147,12 +177,22 @@ const AdminIngestion = () => {
         </div>
 
         {/* Controls */}
-        <div className="flex items-center gap-4 mb-6 p-4 bg-card border border-border rounded-xl">
+        <div className="flex items-center gap-4 mb-6 p-4 bg-card border border-border rounded-xl flex-wrap">
           <label className="flex items-center gap-2 font-body text-sm text-foreground cursor-pointer">
             <Switch checked={deepResearch} onCheckedChange={setDeepResearch} />
             <Flame className={`h-4 w-4 ${deepResearch ? "text-destructive" : "text-muted-foreground"}`} />
             Deep Research (50 dishes per run)
           </label>
+          <Button
+            variant="default"
+            size="sm"
+            disabled={bulkRunning}
+            onClick={runBulkIngestion}
+            className="ml-auto font-body"
+          >
+            {bulkRunning ? <Loader2 className="h-3 w-3 animate-spin mr-2" /> : <Zap className="h-3 w-3 mr-2" />}
+            Bulk Ingest ({underCoveredCount} countries &lt;10 dishes)
+          </Button>
         </div>
 
         {/* Recent Jobs */}
