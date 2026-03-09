@@ -19,6 +19,7 @@ import RestaurantDetailPage from "./pages/RestaurantDetailPage";
 import DishDetailPage from "./pages/DishDetailPage";
 import RecommenderPage from "./pages/RecommenderPage";
 import AdminIngestion from "./pages/AdminIngestion";
+import IngredientsPage from "./pages/IngredientsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ const AnimatedRoutes = () => {
         <Route path="/restaurants/:id" element={<PageTransition><RestaurantDetailPage /></PageTransition>} />
         <Route path="/dishes/:id" element={<PageTransition><DishDetailPage /></PageTransition>} />
         <Route path="/recommend" element={<PageTransition><RecommenderPage /></PageTransition>} />
+        <Route path="/ingredients" element={<PageTransition><IngredientsPage /></PageTransition>} />
         <Route path="/admin" element={<PageTransition><AdminIngestion /></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
