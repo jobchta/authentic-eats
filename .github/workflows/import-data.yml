@@ -1,4 +1,4 @@
-name: Import Restaurant & Cuisine Data (ZERO-COST 2M RECORDS)
+name: Import OSM Restaurant Data (ZERO-COST)
 
 on:
   workflow_dispatch:
@@ -6,22 +6,19 @@ on:
     - cron: '0 2 * * 0'
 
 jobs:
-  import-osm-restaurants:
+  import-osm-data:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests supabase
+        run: pip install requests supabase pycountry
 
-      - name: Import real data from OpenStreetMap
+      - name: Import OSM restaurant data
         env:
           SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -29,144 +26,120 @@ jobs:
           python3 << 'PYEOF'
           import requests
           import os
-          import json
           import time
           from supabase import create_client
+          import pycountry
 
           url = os.environ['SUPABASE_URL']
           key = os.environ['SUPABASE_SERVICE_KEY']
           sb = create_client(url, key)
 
-          CITIES = [
-            ('Tokyo', 'Japan', 'JP', 35.6762, 139.6503, 'Asia'),
-            ('Paris', 'France', 'FR', 48.8566, 2.3522, 'Europe'),
-            ('New York', 'United States', 'US', 40.7128, -74.0060, 'North America'),
-            ('London', 'United Kingdom', 'GB', 51.5074, -0.1278, 'Europe'),
-            ('Rome', 'Italy', 'IT', 41.9028, 12.4964, 'Europe'),
-            ('Mumbai', 'India', 'IN', 19.0760, 72.8777, 'Asia'),
-            ('Singapore', 'Singapore', 'SG', 1.3521, 103.8198, 'Asia'),
-            ('Sydney', 'Australia', 'AU', -33.8688, 151.2093, 'Oceania'),
-            ('Mexico City', 'Mexico', 'MX', 19.4326, -99.1332, 'North America'),
-            ('Bangkok', 'Thailand', 'TH', 13.7563, 100.5018, 'Asia'),
-            ('Istanbul', 'Turkey', 'TR', 41.0082, 28.9784, 'Europe'),
-            ('Cairo', 'Egypt', 'EG', 30.0444, 31.2357, 'Africa'),
-            ('Buenos Aires', 'Argentina', 'AR', -34.6037, -58.3816, 'South America'),
-            ('Lagos', 'Nigeria', 'NG', 6.5244, 3.3792, 'Africa'),
-            ('Seoul', 'South Korea', 'KR', 37.5665, 126.9780, 'Asia'),
-          ]
-
-          # Insert countries first
-          countries_data = {}
-          for city, country, code, lat, lon, region in CITIES:
-            if code not in countries_data:
-              countries_data[code] = {'name': country, 'code': code, 'region': region}
-
-          for code, c in countries_data.items():
-            try:
-              sb.table('countries').upsert({'name': c['name'], 'code': c['code'], 'region': c['region']}, on_conflict='code').execute()
-              print(f"Country upserted: {c['name']}")
-            except Exception as e:
-              print(f"Country error {c['name']}: {e}")
-
-          # Fetch country IDs
-          countries_result = sb.table('countries').select('id,code').execute()
-          country_map = {r['code']: r['id'] for r in countries_result.data}
-
-          CUISINE_MAP = {
-            'japanese': 'Japanese', 'french': 'French', 'american': 'American',
-            'italian': 'Italian', 'indian': 'Indian', 'chinese': 'Chinese',
-            'thai': 'Thai', 'mexican': 'Mexican', 'turkish': 'Turkish',
-            'lebanese': 'Lebanese', 'korean': 'Korean', 'greek': 'Greek',
-            'spanish': 'Spanish', 'vietnamese': 'Vietnamese', 'sushi': 'Japanese',
-            'pizza': 'Italian', 'burger': 'American', 'seafood': 'Seafood',
-            'vegetarian': 'Vegetarian', 'vegan': 'Vegan',
+          FLAG_EMOJI = {
+            'US': '🇺🇸', 'JP': '🇯🇵', 'FR': '🇫🇷', 'GB': '🇬🇧', 'IT': '🇮🇹',
+            'IN': '🇮🇳', 'SG': '🇸🇬', 'AU': '🇦🇺', 'MX': '🇲🇽', 'TH': '🇹🇭',
+            'TR': '🇹🇷', 'EG': '🇪🇬', 'AR': '🇦🇷', 'NG': '🇳🇬', 'KR': '🇰🇷',
           }
 
-          # Ensure cuisines exist
-          cuisine_names = list(set(CUISINE_MAP.values()))
-          cuisine_id_map = {}
-          for cname in cuisine_names:
-            try:
-              res = sb.table('cuisines').upsert({'name': cname}, on_conflict='name').execute()
-              print(f"Cuisine upserted: {cname}")
-            except Exception as e:
-              print(f"Cuisine error {cname}: {e}")
-          
-          cuisines_result = sb.table('cuisines').select('id,name').execute()
-          for r in cuisines_result.data:
-            cuisine_id_map[r['name']] = r['id']
+          CONTINENT_MAP = {
+            'US': 'North America', 'JP': 'Asia', 'FR': 'Europe', 'GB': 'Europe', 'IT': 'Europe',
+            'IN': 'Asia', 'SG': 'Asia', 'AU': 'Oceania', 'MX': 'North America', 'TH': 'Asia',
+            'TR': 'Europe', 'EG': 'Africa', 'AR': 'South America', 'NG': 'Africa', 'KR': 'Asia',
+          }
 
+          CITIES = [
+            ('Tokyo', 'JP', 35.6762, 139.6503, 'Asia'),
+            ('Paris', 'FR', 48.8566, 2.3522, 'Europe'),
+            ('New York', 'US', 40.7128, -74.0060, 'North America'),
+            ('London', 'GB', 51.5074, -0.1278, 'Europe'),
+            ('Rome', 'IT', 41.9028, 12.4964, 'Europe'),
+            ('Mumbai', 'IN', 19.0760, 72.8777, 'Asia'),
+            ('Singapore', 'SG', 1.3521, 103.8198, 'Asia'),
+            ('Sydney', 'AU', -33.8688, 151.2093, 'Oceania'),
+            ('Mexico City', 'MX', 19.4326, -99.1332, 'North America'),
+            ('Bangkok', 'TH', 13.7563, 100.5018, 'Asia'),
+          ]
+
+          # Insert countries first with real pycountry data
+          for city, code, lat, lon, region in CITIES:
+            try:
+              country = pycountry.countries.get(alpha_2=code)
+              cname = country.name
+              continent = CONTINENT_MAP.get(code, region)
+              flag = FLAG_EMOJI.get(code, '🏳️')
+
+              sb.table('countries').upsert({
+                'code': code,
+                'name': cname,
+                'continent': continent,
+                'region': region,
+                'flag_emoji': flag,
+              }, on_conflict='code').execute()
+              print(f"Country upserted: {cname}")
+            except Exception as e:
+              print(f"Country error {code}: {e}")
+
+          # Fetch OSM data and populate osm_restaurant_cache
           total_imported = 0
 
-          for city, country, code, lat, lon, region in CITIES:
-            print(f"\nFetching restaurants for {city}...")
-            country_id = country_map.get(code)
-            if not country_id:
-              print(f"No country ID for {code}, skipping")
-              continue
+          for city, code, lat, lon, region in CITIES:
+            try:
+              country = pycountry.countries.get(alpha_2=code)
+              cname = country.name
+            except:
+              cname = code
 
+            print(f"\nFetching OSM data for {city}...")
             query = f"""
             [out:json][timeout:60];
             (
               node["amenity"="restaurant"](around:8000,{lat},{lon});
               node["amenity"="cafe"](around:8000,{lat},{lon});
             );
-            out body 500;
+            out body 300;
             """
             try:
               resp = requests.post('https://overpass-api.de/api/interpreter', data={'data': query}, timeout=90)
               resp.raise_for_status()
               data = resp.json()
             except Exception as e:
-              print(f"OSM error for {city}: {e}")
+              print(f"OSM API error for {city}: {e}")
               time.sleep(10)
               continue
 
             elements = data.get('elements', [])
             print(f"Got {len(elements)} elements from OSM for {city}")
 
-            batch = []
             for el in elements:
               tags = el.get('tags', {})
               name = tags.get('name') or tags.get('name:en')
               if not name or len(name) < 2:
                 continue
-              
+
+              osm_id = el.get('id')
               lat_r = el.get('lat')
               lon_r = el.get('lon')
-              cuisine_tag = tags.get('cuisine', '').lower().split(';')[0].strip()
-              
-              record = {
-                'name': name[:200],
-                'country_id': country_id,
-                'city': city,
-                'address': tags.get('addr:full') or tags.get('addr:street', ''),
-                'description': tags.get('description', f'Authentic restaurant in {city}'),
-                'phone': tags.get('phone') or tags.get('contact:phone', ''),
-                'website': tags.get('website') or tags.get('contact:website', ''),
-                'latitude': lat_r,
-                'longitude': lon_r,
-                'price_range': 2,
-                'is_verified': False,
-              }
-              batch.append((record, cuisine_tag))
+              cuisine = tags.get('cuisine', '').lower().split(';')[0].strip() or 'international'
 
-            print(f"Inserting {len(batch)} restaurants for {city}")
-            for record, cuisine_tag in batch:
               try:
-                res = sb.table('restaurants').insert(record).execute()
-                rest_id = res.data[0]['id'] if res.data else None
-                if rest_id and cuisine_tag in CUISINE_MAP:
-                  cname = CUISINE_MAP[cuisine_tag]
-                  cid = cuisine_id_map.get(cname)
-                  if cid:
-                    sb.table('restaurant_cuisines').insert({'restaurant_id': rest_id, 'cuisine_id': cid}).execute()
+                sb.table('osm_restaurant_cache').upsert({
+                  'osm_id': osm_id,
+                  'name': name[:200],
+                  'city': city,
+                  'country': cname,
+                  'lat': lat_r,
+                  'lng': lon_r,
+                  'cuisine': cuisine,
+                  'address': tags.get('addr:full') or tags.get('addr:street', ''),
+                  'phone': tags.get('phone') or tags.get('contact:phone', ''),
+                  'website': tags.get('website') or tags.get('contact:website', ''),
+                  'opening_hours': tags.get('opening_hours', ''),
+                }, on_conflict='osm_id').execute()
                 total_imported += 1
               except Exception as e:
                 pass
 
             print(f"City {city} done. Total so far: {total_imported}")
-            time.sleep(3)
+            time.sleep(5)
 
-          print(f"\nIMPORT COMPLETE. Total records: {total_imported}")
+          print(f"\n✅ IMPORT COMPLETE. Total OSM records: {total_imported}")
           PYEOF
