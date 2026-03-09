@@ -40,16 +40,22 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Bootstrap osm_restaurant_cache table
+      - name: Apply DB migration - ensure osm_restaurant_cache exists
         run: |
+          # Install Supabase CLI
+          curl -fsSL https://supabase.com/install.sh | sh 2>/dev/null || true
+          # Extract project ref from SUPABASE_URL (e.g. https://abcdef.supabase.co -> abcdef)
+          PROJECT_REF=$(echo "${SUPABASE_URL}" | sed 's|https://||' | sed 's|.supabase.co.*||')
+          echo "Project ref: ${PROJECT_REF}"
+          # Apply the migration via Supabase Management API
+          SQL="CREATE TABLE IF NOT EXISTS public.osm_restaurant_cache (osm_id bigint PRIMARY KEY, name text NOT NULL DEFAULT 'Unnamed', cuisine text, city text NOT NULL DEFAULT '', country text, lat double precision NOT NULL, lng double precision NOT NULL, address text, phone text, website text, opening_hours text, fetched_at timestamptz NOT NULL DEFAULT now()); CREATE INDEX IF NOT EXISTS idx_osm_cache_country ON public.osm_restaurant_cache (country); CREATE INDEX IF NOT EXISTS idx_osm_cache_lat_lng ON public.osm_restaurant_cache (lat, lng); ALTER TABLE public.osm_restaurant_cache ENABLE ROW LEVEL SECURITY; DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='osm_restaurant_cache' AND policyname='Service role full access') THEN CREATE POLICY \"Service role full access\" ON public.osm_restaurant_cache FOR ALL TO service_role USING (true) WITH CHECK (true); END IF; END \$\$; DO \$\$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='osm_restaurant_cache' AND policyname='Public read osm cache') THEN CREATE POLICY \"Public read osm cache\" ON public.osm_restaurant_cache FOR SELECT TO anon, authenticated USING (true); END IF; END \$\$;"
           curl -s -X POST \
-            "${SUPABASE_URL}/rest/v1/rpc/exec_sql" \
-            -H "apikey: ${SUPABASE_SERVICE_ROLE_KEY}" \
-            -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" \
+            "https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ACCESS_TOKEN }}" \
             -H "Content-Type: application/json" \
-            -d '{}' || true
-          # Use bun script to ensure table exists
-          bun run scripts/ensureTable.ts || true
+            -d "{\"query\": \"${SQL//\"/\\'}\"}" \
+            | head -c 500 || echo "Migration API call done (check if SUPABASE_ACCESS_TOKEN secret is set)"
+        continue-on-error: true
 
       - name: Run OSM tile crawler
         run: bun run scripts/crawlTiles.ts
