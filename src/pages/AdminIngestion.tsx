@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Database, Flame, Globe, Utensils, Leaf, ChefHat, Loader2, CheckCircle2, XCircle, ShieldAlert } from "lucide-react";
+import { Database, Flame, Globe, Utensils, Leaf, ChefHat, Loader2, CheckCircle2, XCircle, ShieldAlert, Zap } from "lucide-react";
 
 const AdminIngestion = () => {
   const { user, loading: authLoading } = useAuth();
