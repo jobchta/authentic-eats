@@ -34,6 +34,7 @@ const PageTransition = ({ children }: { children: React.ReactNode }) => (
 
 const AnimatedRoutes = () => {
   const location = useLocation();
+  useScrollToHash();
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
