@@ -255,9 +255,14 @@ const RestaurantsPage = () => {
 
         {/* Curated Results */}
         <div className="container mx-auto px-4 mt-8">
-          <div className="flex items-center gap-3 mb-4">
-            <ChefHat className="h-5 w-5 text-foreground" />
-            <h2 className="font-display text-xl font-bold text-foreground">Curated Collection</h2>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <ChefHat className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="font-display text-2xl font-bold text-foreground">Curated Collection</h2>
+              <p className="font-body text-xs text-muted-foreground">Hand-picked dining excellence from around the world</p>
+            </div>
           </div>
 
           {isLoading ? (
