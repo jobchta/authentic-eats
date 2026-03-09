@@ -21,7 +21,11 @@ const AdminIngestion = () => {
   const { countries, countriesLoading, totalStats, recentJobs } = useIngestionStats();
   const [deepResearch, setDeepResearch] = useState(false);
   const [runningIds, setRunningIds] = useState<Set<string>>(new Set());
+  const [bulkRunning, setBulkRunning] = useState(false);
   const queryClient = useQueryClient();
+
+  const underCovered = (countries || []).filter((c) => c.dish_count < 10);
+  const underCoveredCount = underCovered.length;
 
   // Check admin role
   useEffect(() => {
