@@ -17,7 +17,7 @@ export function useHomepageDishes() {
         .from("dishes")
         .select("*, country:countries(*)")
         .order("rating", { ascending: false })
-        .limit(20);
+        .limit(50);
       if (error) throw error;
       return data as unknown as DishWithCountry[];
     },

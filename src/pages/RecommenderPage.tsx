@@ -311,17 +311,17 @@ async function generateRecommendations(answers: Record<string, string>): Promise
   const shuffled = results.sort(() => Math.random() - 0.5).slice(0, 8);
 
   // If we don't have enough results, pad with random top dishes
-  if (shuffled.length < 3) {
+  if (shuffled.length < 5) {
     const { data: fallback } = await supabase
       .from("dishes")
       .select("*, country:countries(*)")
       .order("rating", { ascending: false })
-      .limit(5);
+      .limit(20);
     if (fallback) {
       const existingIds = new Set(shuffled.map((d) => d.id));
       for (const d of fallback) {
         if (!existingIds.has(d.id)) shuffled.push(d);
-        if (shuffled.length >= 5) break;
+        if (shuffled.length >= 8) break;
       }
     }
   }
