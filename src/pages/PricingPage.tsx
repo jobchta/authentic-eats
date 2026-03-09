@@ -83,6 +83,7 @@ const comparisons = [
 ];
 
 const PricingPage = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background">
       <Header />
