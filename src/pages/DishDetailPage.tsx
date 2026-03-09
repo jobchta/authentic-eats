@@ -126,7 +126,7 @@ const DishDetailPage = () => {
             {[
               { icon: Star, label: "Rating", value: dish.rating?.toFixed(1) || "N/A", color: "text-accent" },
               { icon: Heart, label: "Reviews", value: (dish.reviews_count ?? 0).toLocaleString(), color: "text-primary" },
-              { icon: Flame, label: "Spice Level", value: dish.spice_level !== null ? `${dish.spice_level}/5` : "Mild", color: "text-destructive" },
+              { icon: Flame, label: "Spice Level", value: dish.spice_level !== null ? `${dish.spice_level}/4` : "Mild", color: "text-destructive" },
               { icon: Globe, label: "Origin", value: dish.country?.name || "Unknown", color: "text-foreground" },
             ].map((stat) => (
               <motion.div
