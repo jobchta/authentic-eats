@@ -199,12 +199,16 @@ const DishDetailPage = () => {
             <h2 className="font-display text-2xl font-bold text-foreground mb-6">More {dish.cuisine_type} Dishes</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {similar.map((d) => {
-                const img = getDishImage(d.name, d.cuisine_type);
+                const img = (d as any).image_url || null;
                 return (
                   <Link key={d.id} to={`/dishes/${d.id}`}>
                     <motion.div whileHover={{ y: -3 }} className="group rounded-xl overflow-hidden border border-border bg-card hover:shadow-lg transition-all">
-                      <div className="aspect-[4/3] relative overflow-hidden">
-                        <img src={img} alt={d.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <div className="aspect-[4/3] relative overflow-hidden bg-muted">
+                        {img ? (
+                          <img src={img} alt={d.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-4xl opacity-30">🍽️</div>
+                        )}
                       </div>
                       <div className="p-3">
                         <h3 className="font-display text-sm font-semibold text-foreground truncate">{d.name}</h3>
