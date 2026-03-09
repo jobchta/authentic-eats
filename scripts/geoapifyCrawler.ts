@@ -94,6 +94,14 @@ async function main() {
   console.log('=== Geoapify Restaurant Crawler ===');
   console.log(`Free tier: 3000 credits/day = ~50k restaurants\n`);
 
+    // Reload PostgREST schema cache
+  try {
+    await supabase.rpc('reload_postgrest_schema');
+    console.log('Schema cache reloaded.');
+  } catch (e: any) {
+    console.log(`Schema reload skipped: ${e?.message ?? 'error'}`);
+  }
+
   let grandTotal = 0;
   
   for (const city of CITIES) {
