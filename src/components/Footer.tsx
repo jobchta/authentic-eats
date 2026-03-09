@@ -3,10 +3,10 @@ import { motion } from "framer-motion";
 import { ArrowUp, Heart } from "lucide-react";
 
 const socialLinks = [
-  { label: "Twitter", icon: "𝕏" },
-  { label: "Instagram", icon: "📷" },
-  { label: "YouTube", icon: "▶" },
-  { label: "TikTok", icon: "♪" },
+  { label: "Twitter", icon: "𝕏", href: "https://twitter.com" },
+  { label: "Instagram", icon: "📷", href: "https://instagram.com" },
+  { label: "YouTube", icon: "▶", href: "https://youtube.com" },
+  { label: "TikTok", icon: "♪", href: "https://tiktok.com" },
 ];
 
 const Footer = () => {
@@ -38,7 +38,9 @@ const Footer = () => {
               {socialLinks.map((s) => (
                 <motion.a
                   key={s.label}
-                  href="#"
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   whileHover={{ scale: 1.1, y: -2 }}
                   className="w-10 h-10 rounded-full bg-background/5 border border-background/10 flex items-center justify-center text-background/50 hover:text-accent hover:border-accent/30 hover:bg-accent/5 transition-all"
                   title={s.label}
@@ -51,11 +53,23 @@ const Footer = () => {
           <div>
             <h4 className="font-display text-sm font-semibold text-background mb-4">Explore</h4>
             <ul className="space-y-2">
-              {["Dishes", "Restaurants", "Cuisines", "Cities", "Stories"].map((link) => (
-                <li key={link}>
-                  <a href={`/#${link.toLowerCase()}`} className="font-body text-sm text-background/40 hover:text-background/80 transition-colors">
-                    {link}
-                  </a>
+              {[
+                { label: "Dishes", href: "/#dishes" },
+                { label: "Restaurants", href: "/restaurants" },
+                { label: "Cuisines", href: "/#cuisines" },
+                { label: "Food Map", href: "/map" },
+                { label: "What to Eat?", href: "/recommend" },
+              ].map((link) => (
+                <li key={link.label}>
+                  {link.href.startsWith("/#") ? (
+                    <a href={link.href} className="font-body text-sm text-background/40 hover:text-background/80 transition-colors">
+                      {link.label}
+                    </a>
+                  ) : (
+                    <Link to={link.href} className="font-body text-sm text-background/40 hover:text-background/80 transition-colors">
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -64,21 +78,14 @@ const Footer = () => {
             <h4 className="font-display text-sm font-semibold text-background mb-4">Business</h4>
             <ul className="space-y-2">
               <li><Link to="/for-restaurants" className="font-body text-sm text-background/40 hover:text-background/80 transition-colors">For Restaurants</Link></li>
-              <li><a href="#" className="font-body text-sm text-background/40 hover:text-background/80 transition-colors">Advertise</a></li>
               <li><Link to="/pricing" className="font-body text-sm text-background/40 hover:text-background/80 transition-colors">Pricing</Link></li>
-              <li><a href="#" className="font-body text-sm text-background/40 hover:text-background/80 transition-colors">API Access</a></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-display text-sm font-semibold text-background mb-4">Company</h4>
+            <h4 className="font-display text-sm font-semibold text-background mb-4">Account</h4>
             <ul className="space-y-2">
-              {["About Us", "Careers", "Press", "Contact"].map((link) => (
-                <li key={link}>
-                  <a href="#" className="font-body text-sm text-background/40 hover:text-background/80 transition-colors">
-                    {link}
-                  </a>
-                </li>
-              ))}
+              <li><Link to="/auth" className="font-body text-sm text-background/40 hover:text-background/80 transition-colors">Sign In</Link></li>
+              <li><Link to="/passport" className="font-body text-sm text-background/40 hover:text-background/80 transition-colors">Food Passport</Link></li>
             </ul>
           </div>
         </div>
@@ -88,11 +95,6 @@ const Footer = () => {
             © 2026 Palate Guide. Made with <Heart className="h-3 w-3 text-destructive fill-current" /> for food lovers.
           </p>
           <div className="flex items-center gap-6">
-            {["Privacy", "Terms", "Cookies"].map((item) => (
-              <a key={item} href="#" className="font-body text-xs text-background/30 hover:text-background/50 transition-colors">
-                {item}
-              </a>
-            ))}
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
