@@ -79,6 +79,13 @@ function mapPlace(feature: any, city: typeof CITIES[0]) {
 
 async function upsertBatch(rows: any[]) {
   let total = 0;
+    // Deduplicate by osm_id to avoid ON CONFLICT errors
+  const seen = new Map();
+  rows = rows.filter(row => {
+    if (seen.has(row.osm_id)) return false;
+    seen.set(row.osm_id, true);
+    return true;
+  });
   for (let i = 0; i < rows.length; i += BATCH_SIZE) {
     const batch = rows.slice(i, i + BATCH_SIZE);
     const { error, count } = await supabase
