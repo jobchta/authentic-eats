@@ -308,7 +308,7 @@ async function generateRecommendations(answers: Record<string, string>): Promise
   }
 
   // Shuffle and take top 5
-  const shuffled = results.sort(() => Math.random() - 0.5).slice(0, 5);
+  const shuffled = results.sort(() => Math.random() - 0.5).slice(0, 8);
 
   // If we don't have enough results, pad with random top dishes
   if (shuffled.length < 3) {
