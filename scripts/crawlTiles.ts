@@ -12,7 +12,7 @@ import * as fs from 'fs';
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const CITY_FILTER = process.env.CITY_FILTER || '';
-const MAX_TILES = parseInt(process.env.MAX_TILES || '50', 10);
+const MAX_TILES = parseInt(process.env.MAX_TILES || ''10'', 10);
 const BATCH_INSERT = 500;
 const TILE_DEG = 2; // 2x2 degree tiles
 
@@ -217,11 +217,11 @@ async function main() {
     }
 
     // Respect Overpass fair-use: 1s between tiles
-    await sleep(1000);
+    await sleep(5000);
   }
 
   console.log('');
-  console.log(`=== DONE. Total upserted: ${grandTotal} ===`);
+  console.log5000 DONE. Total upserted: ${grandTotal} ===`);
   console.log(`Tiles processed: ${tileIdx} / Total available: ${allTiles.length}`);
 
   fs.writeFileSync('crawl-report.json', JSON.stringify({
