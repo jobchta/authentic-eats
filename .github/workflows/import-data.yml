@@ -130,7 +130,7 @@ jobs:
                   'tier': 'Remarkable',                }).execute()
                 inserted += 1
                 total_imported += 1
-              except Exception Remarkable e:
+              except Exception as e:
                 print(f"Insert error for {name}: {e}")
                 pass
 
