@@ -3,6 +3,7 @@ import { Check, Star, Crown, Sparkles, Lock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { useNavigate } from "react-router-dom";
 
 const tiers = [
   {
@@ -80,6 +81,7 @@ const comparisons = [
 ];
 
 const PricingPage = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -173,6 +175,11 @@ const PricingPage = () => {
                       : ""
                   }`}
                   size="lg"
+                  onClick={() => {
+                    if (tier.name === "Free") navigate("/auth");
+                    else if (tier.name === "Palate Pro") navigate("/auth");
+                    else navigate("/auth");
+                  }}
                 >
                   {tier.cta}
                   {tier.name !== "Free" && <ArrowRight className="h-4 w-4 ml-2" />}

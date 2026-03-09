@@ -11,13 +11,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 const allRegions = ["All", "Asia", "Europe", "Americas", "Africa", "Oceania"];
 
 // Wrap motion.article in forwardRef for AnimatePresence
-const DishCard = forwardRef<HTMLElement, any>(({ dish, img, isFavorited, isHero, index, user, navigate, toggleFavorite, ...motionProps }, ref) => {
+const DishCard = forwardRef<HTMLElement, any>(({ dish, img, isFavorited, isHero, index, user, navigate, toggleFavorite, onClick, ...motionProps }, ref) => {
   const gradient = continentGradients[dish.country?.continent] || "from-muted to-muted";
 
   return (
     <motion.article
       ref={ref}
       {...motionProps}
+      onClick={onClick}
       className={`group bg-background rounded-2xl overflow-hidden border border-border cursor-pointer shadow-sm hover:shadow-xl transition-all duration-500 ${
         isHero ? "sm:col-span-2 sm:row-span-1" : ""
       }`}
@@ -200,6 +201,7 @@ const FeaturedDishes = () => {
                     user={user}
                     navigate={navigate}
                     toggleFavorite={toggleFavorite}
+                    onClick={() => navigate(`/dishes/${dish.id}`)}
                     layout
                     initial={{ opacity: 0, y: 30, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -218,8 +220,11 @@ const FeaturedDishes = () => {
           viewport={{ once: true }}
           className="text-center mt-14"
         >
-          <button className="font-body text-sm font-bold text-primary hover:text-primary/80 transition-colors group">
-            View all dishes
+          <button
+            onClick={() => navigate("/restaurants")}
+            className="font-body text-sm font-bold text-primary hover:text-primary/80 transition-colors group"
+          >
+            View all dishes & restaurants
             <span className="inline-block ml-1 transition-transform group-hover:translate-x-1">→</span>
           </button>
         </motion.div>

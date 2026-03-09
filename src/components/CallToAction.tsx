@@ -1,20 +1,53 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { allDishImages } from "@/lib/dish-images";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useRealStats } from "@/hooks/use-real-stats";
 
 const CallToAction = () => {
   const [imgIndex, setImgIndex] = useState(0);
+  const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { data: stats } = useRealStats();
 
   useEffect(() => {
     const timer = setInterval(() => setImgIndex((i) => (i + 1) % allDishImages.length), 4000);
     return () => clearInterval(timer);
   }, []);
+
+  const handleSubscribe = async () => {
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast({ title: "Please enter a valid email", variant: "destructive" });
+      return;
+    }
+    setSubscribing(true);
+    try {
+      const { error } = await supabase.from("newsletter_subscribers").insert({ email: email.trim().toLowerCase() });
+      if (error) {
+        if (error.code === "23505") {
+          toast({ title: "You're already subscribed! 🎉" });
+          setSubscribed(true);
+        } else {
+          throw error;
+        }
+      } else {
+        setSubscribed(true);
+        toast({ title: "Subscribed! Welcome aboard 🍽️" });
+      }
+    } catch (err) {
+      toast({ title: "Something went wrong. Try again.", variant: "destructive" });
+    } finally {
+      setSubscribing(false);
+    }
+  };
 
   return (
     <section className="py-24 relative overflow-hidden">
@@ -31,7 +64,7 @@ const CallToAction = () => {
             viewport={{ once: true }}
           >
             <p className="font-body text-sm font-bold tracking-[0.3em] uppercase text-accent mb-3">
-              Join 184,000+ Food Lovers
+              Join {stats?.members ? `${stats.members.toLocaleString()}+` : "Our"} Food Lovers
             </p>
             <h2 className="font-display text-4xl md:text-5xl font-bold text-background mb-4 leading-tight">
               Your Taste <span className="text-gradient-gold italic">Matters</span>
@@ -48,8 +81,13 @@ const CallToAction = () => {
                 Create Free Account
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
-              <Button size="lg" variant="outline" className="font-body border-background/40 text-background hover:bg-background/15 bg-background/5">
-                Learn How It Works
+              <Button
+                size="lg"
+                variant="outline"
+                className="font-body border-background/40 text-background hover:bg-background/15 bg-background/5"
+                onClick={() => navigate("/pricing")}
+              >
+                View Plans
               </Button>
             </div>
 
@@ -64,7 +102,7 @@ const CallToAction = () => {
               <p className="font-body text-sm text-background/70 italic leading-relaxed">
                 "I've discovered more authentic food in 3 months on Palate Guide than in 10 years of traveling."
               </p>
-              <p className="font-body text-xs text-accent mt-3 font-bold">— Sarah K., Tokyo</p>
+              <p className="font-body text-xs text-accent mt-3 font-bold">— Early Beta User</p>
             </motion.div>
           </motion.div>
 
@@ -100,22 +138,31 @@ const CallToAction = () => {
               <p className="font-body text-sm text-background/50 mb-6">
                 Every Friday: one iconic dish, one hidden-gem restaurant, one food story from a corner of the world you haven't tasted yet.
               </p>
-              <div className="flex gap-2">
+              <form
+                onSubmit={(e) => { e.preventDefault(); handleSubscribe(); }}
+                className="flex gap-2"
+              >
                 <Input
                   type="email"
                   placeholder="your@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={subscribed}
                   className="h-12 font-body bg-white/10 border-white/20 text-background placeholder:text-background/30 focus:ring-accent/50"
                 />
                 <Button
+                  type="submit"
+                  disabled={subscribed || subscribing}
                   className="h-12 px-6 font-body font-semibold shrink-0 bg-accent text-accent-foreground hover:bg-accent/90"
-                  onClick={() => setSubscribed(true)}
                 >
-                  {subscribed ? <Check className="h-4 w-4" /> : "Subscribe"}
+                  {subscribed ? <Check className="h-4 w-4" /> : subscribing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Subscribe"}
                 </Button>
-              </div>
-              <p className="font-body text-[10px] text-background/30 mt-3">
-                Join 42,000+ subscribers. No spam. Unsubscribe anytime.
-              </p>
+              </form>
+              {subscribed && (
+                <p className="font-body text-xs text-accent mt-3">
+                  ✓ You're subscribed! Check your inbox on Friday.
+                </p>
+              )}
             </div>
           </motion.div>
         </div>

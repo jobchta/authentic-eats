@@ -3,10 +3,10 @@ import { motion } from "framer-motion";
 import { ArrowUp, Heart } from "lucide-react";
 
 const socialLinks = [
-  { label: "Twitter", icon: "𝕏", href: "https://twitter.com" },
-  { label: "Instagram", icon: "📷", href: "https://instagram.com" },
-  { label: "YouTube", icon: "▶", href: "https://youtube.com" },
-  { label: "TikTok", icon: "♪", href: "https://tiktok.com" },
+  { label: "Twitter", icon: "𝕏", href: "#" },
+  { label: "Instagram", icon: "📷", href: "#" },
+  { label: "YouTube", icon: "▶", href: "#" },
+  { label: "TikTok", icon: "♪", href: "#" },
 ];
 
 const Footer = () => {
@@ -36,17 +36,14 @@ const Footer = () => {
             {/* Social icons */}
             <div className="flex gap-3">
               {socialLinks.map((s) => (
-                <motion.a
+                <motion.span
                   key={s.label}
-                  href={s.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
                   whileHover={{ scale: 1.1, y: -2 }}
-                  className="w-10 h-10 rounded-full bg-background/5 border border-background/10 flex items-center justify-center text-background/50 hover:text-accent hover:border-accent/30 hover:bg-accent/5 transition-all"
-                  title={s.label}
+                  className="w-10 h-10 rounded-full bg-background/5 border border-background/10 flex items-center justify-center text-background/50 hover:text-accent hover:border-accent/30 hover:bg-accent/5 transition-all cursor-default"
+                  title={`${s.label} (coming soon)`}
                 >
                   <span className="text-sm">{s.icon}</span>
-                </motion.a>
+                </motion.span>
               ))}
             </div>
           </div>

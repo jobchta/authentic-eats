@@ -1,16 +1,7 @@
 import { motion, useInView } from "framer-motion";
-import { Utensils, Store, Globe, MapPin, Users, MessageSquare } from "lucide-react";
-import { stats } from "@/data/food-data";
+import { Utensils, Store, Globe, MapPin, Users } from "lucide-react";
 import { useRef, useState, useEffect } from "react";
-
-const statItems = [
-  { icon: Utensils, value: stats.dishes, suffix: "+", label: "Dishes catalogued" },
-  { icon: Store, value: stats.restaurants, suffix: "+", label: "Restaurants rated" },
-  { icon: MapPin, value: stats.cities, suffix: "+", label: "Cities explored" },
-  { icon: Globe, value: stats.countries, suffix: "", label: "Countries covered" },
-  { icon: MessageSquare, value: stats.reviews / 1000000, suffix: "M+", label: "Reviews written", decimal: 1 },
-  { icon: Users, value: stats.contributors / 1000, suffix: "K+", label: "Contributors", decimal: 0 },
-];
+import { useRealStats } from "@/hooks/use-real-stats";
 
 function AnimatedNumber({ value, suffix, decimal }: { value: number; suffix: string; decimal?: number }) {
   const [display, setDisplay] = useState(0);
@@ -45,6 +36,15 @@ function AnimatedNumber({ value, suffix, decimal }: { value: number; suffix: str
 }
 
 const StatsSection = () => {
+  const { data: stats } = useRealStats();
+
+  const statItems = [
+    { icon: Utensils, value: stats?.dishes ?? 0, suffix: "", label: "Dishes catalogued" },
+    { icon: Store, value: stats?.restaurants ?? 0, suffix: "", label: "Restaurants rated" },
+    { icon: Globe, value: stats?.countries ?? 0, suffix: "", label: "Countries covered" },
+    { icon: Users, value: stats?.members ?? 0, suffix: "", label: "Community members" },
+  ];
+
   return (
     <section className="py-28 relative overflow-hidden particles-bg">
       {/* Rich layered background */}
@@ -71,7 +71,7 @@ const StatsSection = () => {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
           {statItems.map((item, i) => (
             <motion.div
               key={item.label}
@@ -81,13 +81,12 @@ const StatsSection = () => {
               transition={{ delay: i * 0.1, type: "spring", stiffness: 200 }}
               whileHover={{ y: -6, scale: 1.02 }}
               className="text-center p-6 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all duration-500 group"
-              style={{ animationDelay: `${i * 0.5}s` }}
             >
               <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-accent/20 flex items-center justify-center group-hover:bg-accent/30 group-hover:shadow-lg group-hover:shadow-accent/20 transition-all">
                 <item.icon className="h-5 w-5 text-accent" />
               </div>
               <p className="font-display text-3xl md:text-4xl font-bold text-gradient-gold">
-                <AnimatedNumber value={item.value} suffix={item.suffix} decimal={item.decimal} />
+                <AnimatedNumber value={item.value} suffix={item.suffix} />
               </p>
               <p className="font-body text-xs text-primary-foreground/40 mt-2 font-medium tracking-wide">
                 {item.label}
