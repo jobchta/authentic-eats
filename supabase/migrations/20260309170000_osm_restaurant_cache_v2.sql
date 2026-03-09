@@ -67,4 +67,18 @@ END $$;
 
 -- Comment
 COMMENT ON TABLE public.osm_restaurant_cache IS
+
+  -- Helper function: reload PostgREST schema cache
+-- Called by crawler to ensure new tables are visible to PostgREST
+CREATE OR REPLACE FUNCTION public.reload_postgrest_schema()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  NOTIFY pgrst, 'reload schema';
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.reload_postgrest_schema() TO service_role;
   'OSM bulk restaurant data crawled by GitHub Actions. 2M+ records target.';
