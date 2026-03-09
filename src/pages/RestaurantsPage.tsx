@@ -200,43 +200,56 @@ const RestaurantsPage = () => {
 
         {/* OSM Live Discovery Section */}
         {citySearch.length >= 2 && (
-          <div className="container mx-auto px-4 mt-8">
-            <div className="flex items-center gap-3 mb-4">
-              <Globe className="h-5 w-5 text-accent" />
-              <h2 className="font-display text-xl font-bold text-foreground">
-                Live Discovery: {citySearch}
-              </h2>
-              {osmLoading && <Loader2 className="h-4 w-4 animate-spin text-accent" />}
-            </div>
-
-            {osmLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <Skeleton key={i} className="h-28 rounded-xl" />
-                ))}
+          <div className="container mx-auto px-4 mt-12">
+            <div className="border-t border-border pt-8 pb-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                  <Globe className="h-5 w-5 text-accent" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="font-display text-2xl font-bold text-foreground">
+                    Live Discovery
+                  </h2>
+                  <p className="font-body text-xs text-muted-foreground mt-0.5">
+                    Real-time restaurants in {citySearch} · OpenStreetMap Data
+                  </p>
+                </div>
+                {osmLoading && <Loader2 className="h-5 w-5 animate-spin text-accent" />}
               </div>
-            ) : osmError ? (
-              <p className="font-body text-sm text-muted-foreground">
-                Could not reach discovery service. Try again in a moment.
-              </p>
-            ) : osmData && osmData.results.length > 0 ? (
-              <>
+
+              {osmLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {osmData.results.map((r, i) => (
-                    <OsmRestaurantCard key={r.osm_id} restaurant={r} index={i} />
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <Skeleton key={i} className="h-32 rounded-xl" />
                   ))}
                 </div>
-                {osmData.attribution && (
-                  <p className="font-body text-[10px] text-muted-foreground/50 mt-3">
-                    Data: {osmData.attribution}
+              ) : osmError ? (
+                <div className="bg-muted/30 border border-border rounded-xl p-6 text-center">
+                  <p className="font-body text-sm text-muted-foreground">
+                    Could not reach discovery service. Try again in a moment.
                   </p>
-                )}
-              </>
-            ) : osmData ? (
-              <p className="font-body text-sm text-muted-foreground">
-                No restaurants found for "{citySearch}". Try a different city name.
-              </p>
-            ) : null}
+                </div>
+              ) : osmData && osmData.results.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {osmData.results.map((r, i) => (
+                      <OsmRestaurantCard key={r.osm_id} restaurant={r} index={i} />
+                    ))}
+                  </div>
+                  {osmData.attribution && (
+                    <p className="font-body text-[10px] text-muted-foreground/50 mt-4">
+                      {osmData.attribution}
+                    </p>
+                  )}
+                </>
+              ) : osmData ? (
+                <div className="bg-muted/30 border border-border rounded-xl p-6 text-center">
+                  <p className="font-body text-sm text-muted-foreground">
+                    No restaurants found for "{citySearch}". Try a different city name.
+                  </p>
+                </div>
+              ) : null}
+            </div>
           </div>
         )}
 
