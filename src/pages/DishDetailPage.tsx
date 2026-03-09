@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { getDishImage } from "@/lib/dish-images";
+import { useDishImage } from "@/hooks/use-dish-image";
 import type { DishWithCountry } from "@/hooks/use-homepage-data";
 import type { DbRestaurant } from "@/hooks/use-restaurants";
 
@@ -90,7 +90,13 @@ const DishDetailPage = () => {
     );
   }
 
-  const image = getDishImage(dish.name, dish.cuisine_type);
+  const { imageUrl: image } = useDishImage(
+    dish.id,
+    dish.name,
+    dish.cuisine_type,
+    dish.description,
+    (dish as any).image_url
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -126,7 +132,7 @@ const DishDetailPage = () => {
             {[
               { icon: Star, label: "Rating", value: dish.rating?.toFixed(1) || "N/A", color: "text-accent" },
               { icon: Heart, label: "Reviews", value: (dish.reviews_count ?? 0).toLocaleString(), color: "text-primary" },
-              { icon: Flame, label: "Spice Level", value: dish.spice_level !== null ? `${dish.spice_level}/5` : "Mild", color: "text-destructive" },
+              { icon: Flame, label: "Spice Level", value: dish.spice_level !== null ? `${dish.spice_level}/4` : "Mild", color: "text-destructive" },
               { icon: Globe, label: "Origin", value: dish.country?.name || "Unknown", color: "text-foreground" },
             ].map((stat) => (
               <motion.div
@@ -193,12 +199,16 @@ const DishDetailPage = () => {
             <h2 className="font-display text-2xl font-bold text-foreground mb-6">More {dish.cuisine_type} Dishes</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               {similar.map((d) => {
-                const img = getDishImage(d.name, d.cuisine_type);
+                const img = (d as any).image_url || null;
                 return (
                   <Link key={d.id} to={`/dishes/${d.id}`}>
                     <motion.div whileHover={{ y: -3 }} className="group rounded-xl overflow-hidden border border-border bg-card hover:shadow-lg transition-all">
-                      <div className="aspect-[4/3] relative overflow-hidden">
-                        <img src={img} alt={d.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <div className="aspect-[4/3] relative overflow-hidden bg-muted">
+                        {img ? (
+                          <img src={img} alt={d.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-4xl opacity-30">🍽️</div>
+                        )}
                       </div>
                       <div className="p-3">
                         <h3 className="font-display text-sm font-semibold text-foreground truncate">{d.name}</h3>

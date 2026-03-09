@@ -186,7 +186,7 @@ const FeaturedDishes = () => {
           <motion.div layout className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             <AnimatePresence mode="popLayout">
               {filtered.map((dish, i) => {
-                const img = getDishImage(dish.name, dish.cuisine_type);
+                const img = (dish as any).image_url || getDishImage(dish.name, dish.cuisine_type);
                 const isFavorited = favorites?.some((f: any) => f.dish_id === dish.id) ?? false;
                 const isHero = i === 0;
 
